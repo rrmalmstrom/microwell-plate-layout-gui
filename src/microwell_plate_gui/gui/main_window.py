@@ -10,6 +10,10 @@ Context7 Reference: Tkinter application architecture patterns and main window se
 import tkinter as tk
 from tkinter import ttk
 from typing import Optional, Callable
+from .metadata_panel import MetadataPanel
+from .plate_canvas import PlateCanvas
+from .legend_panel import LegendPanel
+from ..data.database import DatabaseManager
 
 
 class StartupDialog:
@@ -35,8 +39,8 @@ class StartupDialog:
         self.dialog.geometry("400x300")
         self.dialog.resizable(False, False)
         
-        # Center dialog on parent
-        self.dialog.transient(parent)
+        # Center dialog on parent - Context7 Reference: wm_transient for modal dialogs
+        self.dialog.wm_transient(parent)
         self.dialog.grab_set()
         
         # Variables for user selections
@@ -99,16 +103,24 @@ class StartupDialog:
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill=tk.X)
         
-        ttk.Button(
+        # Use tk.Button instead of ttk.Button for better macOS compatibility
+        # Context7 Reference: Basic tk.Button creation with explicit text
+        tk.Button(
             button_frame,
             text="Cancel",
-            command=self._on_cancel
+            command=self._on_cancel,
+            font=("Arial", 12),
+            padx=20,
+            pady=5
         ).pack(side=tk.RIGHT, padx=(10, 0))
         
-        ttk.Button(
+        tk.Button(
             button_frame,
             text="Continue",
-            command=self._on_continue
+            command=self._on_continue,
+            font=("Arial", 12),
+            padx=20,
+            pady=5
         ).pack(side=tk.RIGHT)
         
     def _on_continue(self):
@@ -156,16 +168,26 @@ class MainWindow:
     - Standard widget configuration patterns
     """
     
-    def __init__(self, root: tk.Tk):
+    def __init__(self, root: tk.Tk, db_path: str = "example_database.db"):
         """
         Initialize main window.
         
         Args:
             root: Tkinter root window
+            db_path: Path to SQLite database file
         """
         self.root = root
         self.plate_type = None
         self.sample_mode = None
+        self.db_path = db_path
+        
+        # Initialize database manager
+        self.db_manager = DatabaseManager(db_path)
+        
+        # Initialize components
+        self.plate_canvas = None
+        self.metadata_panel = None
+        self.legend_panel = None
         
         self._setup_window()
         self._create_layout()
@@ -189,26 +211,36 @@ class MainWindow:
         
         # Create frames for each panel
         self.plate_frame = ttk.Frame(self.paned_window)
-        self.metadata_frame = ttk.Frame(self.paned_window)
+        self.right_panel_frame = ttk.Frame(self.paned_window)
         
-        # Add frames to paned window with equal weight
-        self.paned_window.add(self.plate_frame, weight=1)
-        self.paned_window.add(self.metadata_frame, weight=1)
+        # Add frames to paned window - plate gets more space
+        self.paned_window.add(self.plate_frame, weight=2)
+        self.paned_window.add(self.right_panel_frame, weight=1)
         
-        # Add placeholder labels for now
-        ttk.Label(
+        # Create vertical paned window for right panel (metadata + legend)
+        self.right_paned_window = ttk.Panedwindow(self.right_panel_frame, orient=tk.VERTICAL)
+        self.right_paned_window.pack(fill=tk.BOTH, expand=True)
+        
+        # Create frames for metadata and legend
+        self.metadata_frame = ttk.Frame(self.right_paned_window)
+        self.legend_frame = ttk.Frame(self.right_paned_window)
+        
+        # Add frames to right paned window - give legend more space
+        self.right_paned_window.add(self.metadata_frame, weight=3)
+        self.right_paned_window.add(self.legend_frame, weight=2)
+        
+        # Create metadata and legend panels
+        self.metadata_panel = MetadataPanel(self.metadata_frame, self.db_manager)
+        self.legend_panel = LegendPanel(self.legend_frame)
+        
+        # Placeholder for plate canvas (will be created after startup dialog)
+        self.plate_canvas_placeholder = ttk.Label(
             self.plate_frame,
-            text="Plate Visualization Panel\n(Canvas will be implemented in Phase 1.3)",
+            text="Select plate type from startup dialog to initialize plate canvas",
             font=("Arial", 12),
             anchor=tk.CENTER
-        ).pack(expand=True)
-        
-        ttk.Label(
-            self.metadata_frame,
-            text="Metadata Entry Panel\n(Forms will be implemented in Phase 2)",
-            font=("Arial", 12),
-            anchor=tk.CENTER
-        ).pack(expand=True)
+        )
+        self.plate_canvas_placeholder.pack(expand=True)
         
     def show_startup_dialog(self) -> bool:
         """
@@ -240,3 +272,65 @@ class MainWindow:
         # Update window title to show configuration
         title = f"Microwell Plate Layout Designer - {plate_type}-well ({sample_mode} sample)"
         self.root.title(title)
+        
+        # Create plate canvas now that we know the plate type
+        self._create_plate_canvas()
+    
+    def _create_plate_canvas(self):
+        """Create the plate canvas with the selected plate type."""
+        if self.plate_type:
+            # Remove placeholder
+            if hasattr(self, 'plate_canvas_placeholder'):
+                self.plate_canvas_placeholder.destroy()
+            
+            # Create plate canvas
+            plate_type_str = f"{self.plate_type}-well"
+            self.plate_canvas = PlateCanvas(self.plate_frame, plate_type_str)
+            
+            # Pack the canvas to make it visible
+            self.plate_canvas.canvas.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+            
+            # Connect plate canvas to metadata panel for well selection
+            self._setup_well_selection_integration()
+    
+    def _setup_well_selection_integration(self):
+        """Setup integration between plate canvas, metadata panel, and legend panel."""
+        # Connect metadata panel to plate canvas for applying metadata
+        if self.plate_canvas and self.metadata_panel:
+            # Wrap the apply metadata callback to also update legend
+            def apply_metadata_with_legend_update(metadata):
+                self.plate_canvas.apply_metadata_to_selection(metadata)
+                # Update legend after metadata is applied
+                self._update_legend()
+            
+            self.metadata_panel.set_apply_metadata_callback(apply_metadata_with_legend_update)
+            
+            # Wrap the clear all metadata callback to also clear legend
+            def clear_all_metadata_with_legend_update():
+                self.plate_canvas.clear_all_metadata()
+                # Clear legend after metadata is cleared
+                if self.legend_panel:
+                    self.legend_panel.clear_legend()
+            
+            self.metadata_panel.set_clear_all_metadata_callback(clear_all_metadata_with_legend_update)
+            
+            # Set up well selection callback for logging and UI updates
+            def on_well_selection_changed(selected_wells):
+                print(f"Wells selected: {selected_wells}")
+                # Enable/disable apply button based on selection
+                if hasattr(self.metadata_panel, 'apply_button'):
+                    if selected_wells:
+                        self.metadata_panel.apply_button.configure(state='normal')
+                    else:
+                        self.metadata_panel.apply_button.configure(state='disabled')
+            
+            # Connect the callback to the plate canvas
+            self.plate_canvas.set_selection_callback(on_well_selection_changed)
+    
+    def _update_legend(self):
+        """Update the legend panel with current color and pattern mappings."""
+        if self.legend_panel and self.plate_canvas:
+            self.legend_panel.update_legend(
+                self.plate_canvas.group1_colors,
+                self.plate_canvas.group2_patterns
+            )
