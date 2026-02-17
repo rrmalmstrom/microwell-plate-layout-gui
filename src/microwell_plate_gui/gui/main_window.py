@@ -8,12 +8,16 @@ Context7 Reference: Tkinter application architecture patterns and main window se
 """
 
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from typing import Optional, Callable
+import logging
 from .metadata_panel import MetadataPanel
 from .plate_canvas import PlateCanvas
 from .legend_panel import LegendPanel
 from ..data.database import DatabaseManager
+from ..utils.csv_export import export_plate_layout, CSVExportError
+
+logger = logging.getLogger(__name__)
 
 
 class StartupDialog:
@@ -834,6 +838,9 @@ class MainWindow:
             
             self.metadata_panel.set_clear_all_metadata_callback(clear_all_metadata_with_legend_update)
             
+            # Set up CSV export callback
+            self.metadata_panel.set_export_csv_callback(self._export_csv)
+            
             # Set up well selection callback for logging and UI updates
             def on_well_selection_changed(selected_wells):
                 print(f"Wells selected: {selected_wells}")
@@ -843,9 +850,25 @@ class MainWindow:
                         self.metadata_panel.apply_button.configure(state='normal')
                     else:
                         self.metadata_panel.apply_button.configure(state='disabled')
+                
+                # Enable/disable export button based on whether plate has metadata
+                if hasattr(self.metadata_panel, 'export_csv_button'):
+                    has_metadata = bool(self.plate_canvas.well_metadata)
+                    if has_metadata:
+                        self.metadata_panel.export_csv_button.configure(state='normal')
+                    else:
+                        self.metadata_panel.export_csv_button.configure(state='disabled')
             
             # Connect the callback to the plate canvas
             self.plate_canvas.set_selection_callback(on_well_selection_changed)
+            
+            # Initial state for export button
+            if hasattr(self.metadata_panel, 'export_csv_button'):
+                has_metadata = bool(self.plate_canvas.well_metadata)
+                if has_metadata:
+                    self.metadata_panel.export_csv_button.configure(state='normal')
+                else:
+                    self.metadata_panel.export_csv_button.configure(state='disabled')
     
     def _update_legend(self):
         """Update the legend panel with current color and pattern mappings."""
@@ -854,3 +877,71 @@ class MainWindow:
                 self.plate_canvas.group1_colors,
                 self.plate_canvas.group2_patterns
             )
+    
+    def _export_csv(self):
+        """Export plate layout to CSV file with file dialog."""
+        try:
+            # Validate that we have data to export
+            if not self.plate_canvas or not self.plate_canvas.well_metadata:
+                messagebox.showwarning(
+                    "Export Warning",
+                    "No metadata found on plate. Please add metadata to wells before exporting."
+                )
+                return
+            
+            # Get default filename based on plate name
+            default_filename = self._get_default_export_filename()
+            
+            # Show file save dialog
+            filename = filedialog.asksaveasfilename(
+                title="Export Plate Layout",
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+                initialfile=default_filename
+            )
+            
+            if not filename:  # User cancelled
+                return
+            
+            # Perform the export
+            exported_file = export_plate_layout(self.plate_canvas, self, filename)
+            
+            # Show success message
+            messagebox.showinfo(
+                "Export Successful",
+                f"Plate layout exported successfully to:\n{exported_file}"
+            )
+            
+            logger.info(f"CSV export completed: {exported_file}")
+            
+        except CSVExportError as e:
+            logger.error(f"CSV export error: {e}")
+            messagebox.showerror("Export Error", str(e))
+        except Exception as e:
+            logger.error(f"Unexpected export error: {e}")
+            messagebox.showerror("Export Error", f"An unexpected error occurred: {str(e)}")
+    
+    def _get_default_export_filename(self) -> str:
+        """
+        Generate default filename for CSV export based on plate configuration.
+        
+        Returns:
+            str: Default filename for CSV export
+        """
+        # Get plate name from configuration
+        if self.sample_mode == "single" and self.single_sample_config:
+            plate_name = self.single_sample_config.get('plate_name', 'plate')
+        elif self.sample_mode == "multi" and self.multi_sample_config:
+            plate_name = self.multi_sample_config.get('sample_plate_name', 'plate')
+        else:
+            plate_name = f"plate_{self.plate_type}well"
+        
+        # Sanitize filename
+        import re
+        safe_name = re.sub(r'[^\w\-_.]', '_', plate_name)
+        
+        # Ensure .csv extension
+        if not safe_name.lower().endswith('.csv'):
+            safe_name += '.csv'
+        
+        return safe_name

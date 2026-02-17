@@ -8,7 +8,7 @@ Context7 Reference: ttk.Combobox, ttk.Entry, ttk.Label form widgets and grid lay
 """
 
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog, messagebox
 from typing import Dict, List, Tuple, Optional, Any
 import logging
 
@@ -39,9 +39,10 @@ class MetadataPanel:
         self.parent = parent
         self.db_manager = db_manager
         
-        # Callbacks for communicating with plate canvas
+        # Callbacks for communicating with plate canvas and main window
         self.apply_metadata_callback = None
         self.clear_all_metadata_callback = None
+        self.export_csv_callback = None
         
         # Initialize StringVar variables for all form fields
         self.sample_var = tk.StringVar()
@@ -237,7 +238,15 @@ class MetadataPanel:
             text="Clear All Metadata",
             command=self._clear_all_metadata
         )
-        self.clear_all_button.pack(side=tk.LEFT)
+        self.clear_all_button.pack(side=tk.LEFT, padx=(0, 5))
+        
+        # Export CSV button
+        self.export_csv_button = ttk.Button(
+            self.button_frame,
+            text="Export CSV",
+            command=self._export_csv
+        )
+        self.export_csv_button.pack(side=tk.LEFT)
     
     def _populate_dropdowns(self) -> None:
         """Populate dropdown widgets with data from database."""
@@ -404,6 +413,10 @@ class MetadataPanel:
         """Set the callback function for clearing all metadata from wells."""
         self.clear_all_metadata_callback = callback
     
+    def set_export_csv_callback(self, callback):
+        """Set the callback function for exporting CSV."""
+        self.export_csv_callback = callback
+    
     def _clear_all_metadata(self) -> None:
         """Clear all metadata from all wells."""
         if self.clear_all_metadata_callback:
@@ -411,6 +424,19 @@ class MetadataPanel:
             logger.info("Cleared all metadata from plate")
         else:
             logger.warning("No clear_all_metadata_callback set")
+    
+    def _export_csv(self) -> None:
+        """Export plate layout to CSV file."""
+        try:
+            if self.export_csv_callback:
+                self.export_csv_callback()
+                logger.info("CSV export initiated")
+            else:
+                logger.warning("No export_csv_callback set")
+                messagebox.showerror("Export Error", "CSV export functionality not available")
+        except Exception as e:
+            logger.error(f"Error during CSV export: {e}")
+            messagebox.showerror("Export Error", f"Failed to export CSV: {str(e)}")
     
     def validate_form(self) -> Tuple[bool, List[str]]:
         """
