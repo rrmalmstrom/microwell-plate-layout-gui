@@ -66,21 +66,29 @@ class MetadataPanel:
         self.main_frame = ttk.Frame(self.parent, padding="10")
         self.main_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
         
+        # Configure parent grid weights for responsive layout
+        self.parent.grid_rowconfigure(0, weight=1)
+        self.parent.grid_columnconfigure(0, weight=1)
+        
         # Configure grid weights for responsive layout
-        self.main_frame.columnconfigure(1, weight=1)
-        self.main_frame.columnconfigure(2, weight=1)  # For "Other" fields
+        self.main_frame.columnconfigure(1, weight=2)  # Main fields get more space
+        self.main_frame.columnconfigure(2, weight=1)  # "Other" fields get less space but still responsive
+        
+        # Initialize row tracking for dynamic layout
+        self.current_row = 0
         
         # Create form title
-        title_label = ttk.Label(
+        self.title_label = ttk.Label(
             self.main_frame,
             text="Metadata Entry",
             font=("Arial", 14, "bold")
         )
-        title_label.grid(row=0, column=0, columnspan=2, pady=(0, 15), sticky="w")
+        self.title_label.grid(row=self.current_row, column=0, columnspan=3, pady=(0, 15), sticky="w")
+        self.current_row += 1
         
         # Sample selection (no project dropdown per requirements)
         self.sample_label = ttk.Label(self.main_frame, text="Sample:")
-        self.sample_label.grid(row=1, column=0, sticky="w", pady=2)
+        self.sample_label.grid(row=self.current_row, column=0, sticky="w", pady=2)
         
         # Context7 Reference: ttk.Combobox with "other" option
         self.sample_combo = ttk.Combobox(
@@ -89,19 +97,22 @@ class MetadataPanel:
             state="readonly",
             width=30
         )
-        self.sample_combo.grid(row=1, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.sample_combo.grid(row=self.current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
         
         # Sample "Other" text entry (initially hidden)
+        # Context7 Reference: Entry widget with proper state management
         self.sample_other_entry = ttk.Entry(
             self.main_frame,
             textvariable=self.sample_other_var,
-            width=30
+            state='normal'  # Ensure it's editable from creation
         )
-        # Will be shown/hidden dynamically
+        # Store row for dynamic positioning
+        self.sample_row = self.current_row
+        self.current_row += 1
         
         # Plate name selection (populated based on sample selection)
         self.plate_name_label = ttk.Label(self.main_frame, text="Plate Name:")
-        self.plate_name_label.grid(row=2, column=0, sticky="w", pady=2)
+        self.plate_name_label.grid(row=self.current_row, column=0, sticky="w", pady=2)
         
         self.plate_name_combo = ttk.Combobox(
             self.main_frame,
@@ -109,19 +120,20 @@ class MetadataPanel:
             state="readonly",
             width=30
         )
-        self.plate_name_combo.grid(row=2, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.plate_name_combo.grid(row=self.current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
         
         # Plate name "Other" text entry (initially hidden)
         self.plate_name_other_entry = ttk.Entry(
             self.main_frame,
             textvariable=self.plate_name_other_var,
-            width=30
+            state='normal'
         )
-        # Will be shown/hidden dynamically
+        self.plate_name_row = self.current_row
+        self.current_row += 1
         
         # Sample type selection with "other" option
         self.sample_type_label = ttk.Label(self.main_frame, text="Sample Type:")
-        self.sample_type_label.grid(row=3, column=0, sticky="w", pady=2)
+        self.sample_type_label.grid(row=self.current_row, column=0, sticky="w", pady=2)
         
         self.sample_type_combo = ttk.Combobox(
             self.main_frame,
@@ -130,19 +142,23 @@ class MetadataPanel:
             state="readonly",
             width=30
         )
-        self.sample_type_combo.grid(row=3, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.sample_type_combo.grid(row=self.current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
         
         # Sample type "Other" text entry (initially hidden)
         self.sample_type_other_entry = ttk.Entry(
             self.main_frame,
             textvariable=self.sample_type_other_var,
-            width=30
+            state='normal'
         )
-        # Will be shown/hidden dynamically
+        # Create "Specify:" label for sample type other field
+        self.sample_type_other_label = ttk.Label(self.main_frame, text="Specify:")
+        
+        self.sample_type_row = self.current_row
+        self.current_row += 1
         
         # Cell count entry
         self.cell_count_label = ttk.Label(self.main_frame, text="Cell Count:")
-        self.cell_count_label.grid(row=4, column=0, sticky="w", pady=2)
+        self.cell_count_label.grid(row=self.current_row, column=0, sticky="w", pady=2)
         
         # Context7 Reference: ttk.Entry with validation
         self.cell_count_entry = ttk.Entry(
@@ -152,48 +168,56 @@ class MetadataPanel:
             validate="key",
             validatecommand=(self.main_frame.register(self._validate_cell_count), "%P")
         )
-        self.cell_count_entry.grid(row=4, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.cell_count_entry.grid(row=self.current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.cell_count_row = self.current_row
+        self.current_row += 1
         
         # Group level 1
         self.group1_label = ttk.Label(self.main_frame, text="Group Level 1:")
-        self.group1_label.grid(row=5, column=0, sticky="w", pady=2)
+        self.group1_label.grid(row=self.current_row, column=0, sticky="w", pady=2)
         
         self.group1_entry = ttk.Entry(
             self.main_frame,
             textvariable=self.group1_var,
             width=30
         )
-        self.group1_entry.grid(row=5, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group1_entry.grid(row=self.current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group1_row = self.current_row
+        self.current_row += 1
         
         # Group level 2
         self.group2_label = ttk.Label(self.main_frame, text="Group Level 2:")
-        self.group2_label.grid(row=6, column=0, sticky="w", pady=2)
+        self.group2_label.grid(row=self.current_row, column=0, sticky="w", pady=2)
         
         self.group2_entry = ttk.Entry(
             self.main_frame,
             textvariable=self.group2_var,
             width=30
         )
-        self.group2_entry.grid(row=6, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group2_entry.grid(row=self.current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group2_row = self.current_row
+        self.current_row += 1
         
         # Group level 3
         self.group3_label = ttk.Label(self.main_frame, text="Group Level 3:")
-        self.group3_label.grid(row=7, column=0, sticky="w", pady=2)
+        self.group3_label.grid(row=self.current_row, column=0, sticky="w", pady=2)
         
         self.group3_entry = ttk.Entry(
             self.main_frame,
             textvariable=self.group3_var,
             width=30
         )
-        self.group3_entry.grid(row=7, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group3_entry.grid(row=self.current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group3_row = self.current_row
+        self.current_row += 1
         
         # Action buttons frame
-        button_frame = ttk.Frame(self.main_frame)
-        button_frame.grid(row=8, column=0, columnspan=2, pady=(15, 0), sticky="ew")
+        self.button_frame = ttk.Frame(self.main_frame)
+        self.button_frame.grid(row=self.current_row, column=0, columnspan=3, pady=(15, 0), sticky="ew")
         
         # Apply metadata button
         self.apply_button = ttk.Button(
-            button_frame,
+            self.button_frame,
             text="Apply to Selected Wells",
             command=self._apply_metadata
         )
@@ -201,7 +225,7 @@ class MetadataPanel:
         
         # Clear form button
         self.clear_button = ttk.Button(
-            button_frame,
+            self.button_frame,
             text="Clear Form",
             command=self.clear_form
         )
@@ -209,7 +233,7 @@ class MetadataPanel:
         
         # Clear all metadata button
         self.clear_all_button = ttk.Button(
-            button_frame,
+            self.button_frame,
             text="Clear All Metadata",
             command=self._clear_all_metadata
         )
@@ -269,8 +293,19 @@ class MetadataPanel:
     
     def _toggle_sample_other_field(self, *args) -> None:
         """Show/hide sample 'Other' text field based on selection."""
+        # Context7 Reference: Proper grid layout management for dynamic widgets
         if self.sample_var.get() == "other":
-            self.sample_other_entry.grid(row=1, column=2, sticky="ew", pady=2, padx=(5, 0))
+            # Position in column 2 (next to dropdown)
+            self.sample_other_entry.grid(
+                row=self.sample_row,
+                column=2,
+                sticky="ew",
+                pady=2,
+                padx=(5, 0)
+            )
+            # Ensure proper state and focus
+            self.sample_other_entry.configure(state='normal')
+            self.sample_other_entry.focus_set()
         else:
             self.sample_other_entry.grid_remove()
             self.sample_other_var.set("")
@@ -278,18 +313,43 @@ class MetadataPanel:
     def _toggle_plate_name_other_field(self, *args) -> None:
         """Show/hide plate name 'Other' text field based on selection."""
         if self.plate_name_var.get() == "other":
-            self.plate_name_other_entry.grid(row=2, column=2, sticky="ew", pady=2, padx=(5, 0))
+            # Position in column 2 (next to dropdown)
+            self.plate_name_other_entry.grid(
+                row=self.plate_name_row,
+                column=2,
+                sticky="ew",
+                pady=2,
+                padx=(5, 0)
+            )
+            # Ensure proper state and focus
+            self.plate_name_other_entry.configure(state='normal')
+            self.plate_name_other_entry.focus_set()
         else:
             self.plate_name_other_entry.grid_remove()
             self.plate_name_other_var.set("")
     
     def _toggle_sample_type_other_field(self, *args) -> None:
         """Show/hide sample type 'Other' text field based on selection."""
+        # Context7 Reference: Dynamic widget positioning with proper grid management
         if self.sample_type_var.get() == "other":
-            self.sample_type_other_entry.grid(row=3, column=2, sticky="ew", pady=2, padx=(5, 0))
+            # Place the "Other" field in column 2 (next to the dropdown) to avoid row conflicts
+            self.sample_type_other_entry.grid(
+                row=self.sample_type_row,
+                column=2,
+                sticky="ew",
+                pady=2,
+                padx=(5, 0)
+            )
+            
+            # Ensure the entry is properly configured and focusable
+            self.sample_type_other_entry.configure(state='normal')
+            self.sample_type_other_entry.focus_set()
+            
         else:
+            # Hide the other field
             self.sample_type_other_entry.grid_remove()
             self.sample_type_other_var.set("")
+    
     
     def _validate_cell_count(self, value: str) -> bool:
         """
@@ -476,3 +536,237 @@ class MetadataPanel:
         self.group3_entry.configure(state=entry_state)
         self.apply_button.configure(state=entry_state)
         self.clear_button.configure(state=entry_state)
+        
+        # Also enable/disable "Other" entry fields
+        self.sample_other_entry.configure(state=entry_state)
+        self.plate_name_other_entry.configure(state=entry_state)
+        self.sample_type_other_entry.configure(state=entry_state)
+    
+    def hide_sample_and_plate_fields(self):
+        """
+        Hide sample and plate name fields for single-sample mode.
+        These are already configured in the intermediate dialog.
+        """
+        # Hide sample widgets
+        self.sample_label.grid_remove()
+        self.sample_combo.grid_remove()
+        self.sample_other_entry.grid_remove()
+        
+        # Hide plate name widgets
+        self.plate_name_label.grid_remove()
+        self.plate_name_combo.grid_remove()
+        self.plate_name_other_entry.grid_remove()
+        
+        # Adjust grid layout for remaining widgets
+        self._adjust_grid_layout_after_hiding_fields()
+    
+    def hide_plate_name_field(self):
+        """
+        Hide plate name field for multi-sample mode.
+        Plate name is already configured in the intermediate dialog.
+        """
+        # Hide plate name widgets
+        self.plate_name_label.grid_remove()
+        self.plate_name_combo.grid_remove()
+        self.plate_name_other_entry.grid_remove()
+        
+        # Adjust grid layout for multi-sample mode (keep sample dropdown visible)
+        self._adjust_grid_layout_for_multi_sample_mode()
+    
+    def _adjust_grid_layout_after_hiding_fields(self):
+        """Adjust grid layout after hiding some fields."""
+        # Context7 Reference: Proper grid layout management after dynamic changes
+        current_row = 1  # Start after title
+        
+        # Sample type (always visible) - update its stored row position
+        self.sample_type_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.sample_type_combo.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.sample_type_row = current_row
+        current_row += 1
+        
+        # Cell count (always visible) - update its stored row position
+        self.cell_count_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.cell_count_entry.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.cell_count_row = current_row
+        current_row += 1
+        
+        # Group levels (always visible) - update their stored row positions
+        self.group1_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.group1_entry.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group1_row = current_row
+        current_row += 1
+        
+        self.group2_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.group2_entry.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group2_row = current_row
+        current_row += 1
+        
+        self.group3_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.group3_entry.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group3_row = current_row
+        current_row += 1
+        
+        # Move button frame to the new position
+        self.button_frame.grid(row=current_row, column=0, columnspan=3, pady=(15, 0), sticky="ew")
+        
+        # Note: Do NOT call _toggle_sample_type_other_field() here to avoid recursion
+        # The "Other" field visibility will be handled by the existing trace callbacks
+    
+    def _adjust_grid_layout_for_multi_sample_mode(self):
+        """Adjust grid layout for multi-sample mode (keep sample dropdown, hide plate name)."""
+        # Context7 Reference: Proper grid layout management for multi-sample mode
+        current_row = 1  # Start after title
+        
+        # Sample dropdown (visible in multi-sample mode) - update its stored row position
+        self.sample_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.sample_combo.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.sample_row = current_row
+        current_row += 1
+        
+        # Sample type (always visible) - update its stored row position
+        self.sample_type_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.sample_type_combo.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.sample_type_row = current_row
+        current_row += 1
+        
+        # Cell count (always visible) - update its stored row position
+        self.cell_count_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.cell_count_entry.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.cell_count_row = current_row
+        current_row += 1
+        
+        # Group levels (always visible) - update their stored row positions
+        self.group1_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.group1_entry.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group1_row = current_row
+        current_row += 1
+        
+        self.group2_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.group2_entry.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group2_row = current_row
+        current_row += 1
+        
+        self.group3_label.grid(row=current_row, column=0, sticky="w", pady=2)
+        self.group3_entry.grid(row=current_row, column=1, sticky="ew", pady=2, padx=(5, 0))
+        self.group3_row = current_row
+        current_row += 1
+        
+        # Move button frame to the new position
+        self.button_frame.grid(row=current_row, column=0, columnspan=3, pady=(15, 0), sticky="ew")
+        
+        # Note: The "Other" field visibility will be handled by the existing trace callbacks
+    
+    def set_single_sample_defaults(self, config: dict):
+        """
+        Set default values for single-sample mode.
+        
+        Args:
+            config: Dictionary with 'sample' and 'plate_name' keys
+        """
+        # Store the single-sample configuration for use in metadata generation
+        self._single_sample_config = config
+        
+        # Update form title to indicate single-sample mode
+        if hasattr(self, 'title_label'):
+            self.title_label.configure(text="Metadata Entry (Single Sample Mode)")
+    
+    def set_multi_sample_defaults(self, config: dict):
+        """
+        Set default values for multi-sample mode.
+        
+        Args:
+            config: Dictionary with 'sample_plate_name' key
+        """
+        # Store the multi-sample configuration for use in metadata generation
+        self._multi_sample_config = config
+        
+        # Update form title to indicate multi-sample mode
+        if hasattr(self, 'title_label'):
+            self.title_label.configure(text="Metadata Entry (Multi-Sample Mode)")
+    
+    def get_metadata(self) -> Dict[str, Any]:
+        """
+        Get all metadata values as dictionary.
+        Now handles both single-sample and multi-sample modes.
+        
+        Returns:
+            Dictionary containing all form values
+        """
+        # Get actual values, using "other" text fields when "other" is selected
+        sample_value = self.sample_var.get().strip()
+        if sample_value == "other":
+            sample_value = self.sample_other_var.get().strip()
+        
+        plate_name_value = self.plate_name_var.get().strip()
+        if plate_name_value == "other":
+            plate_name_value = self.plate_name_other_var.get().strip()
+        
+        sample_type_value = self.sample_type_var.get().strip()
+        if sample_type_value == "other":
+            sample_type_value = self.sample_type_other_var.get().strip()
+        
+        # Handle single-sample mode: use pre-configured values
+        if hasattr(self, '_single_sample_config') and self._single_sample_config:
+            sample_value = self._single_sample_config['sample']
+            plate_name_value = self._single_sample_config['plate_name']
+        
+        # Handle multi-sample mode: use pre-configured plate name
+        if hasattr(self, '_multi_sample_config') and self._multi_sample_config:
+            plate_name_value = self._multi_sample_config['sample_plate_name']
+        
+        return {
+            'sample': sample_value,
+            'plate_name': plate_name_value,
+            'sample_type': sample_type_value,
+            'cell_count': self.cell_count_var.get().strip(),
+            'group1': self.group1_var.get().strip(),
+            'group2': self.group2_var.get().strip(),
+            'group3': self.group3_var.get().strip()
+        }
+    
+    def validate_form(self) -> Tuple[bool, List[str]]:
+        """
+        Validate all form fields.
+        Updated to handle single-sample and multi-sample modes.
+        
+        Returns:
+            Tuple of (is_valid, error_messages)
+        """
+        errors = []
+        
+        # In single-sample mode, sample and plate are pre-configured
+        if not (hasattr(self, '_single_sample_config') and self._single_sample_config):
+            # Check sample field (only if not in single-sample mode)
+            sample_value = self.sample_var.get().strip()
+            if not sample_value:
+                errors.append("Sample is required")
+            elif sample_value == "other" and not self.sample_other_var.get().strip():
+                errors.append("Please specify the sample name when 'other' is selected")
+        
+        # In both single and multi-sample modes, plate name is pre-configured
+        if not (hasattr(self, '_single_sample_config') and self._single_sample_config) and \
+           not (hasattr(self, '_multi_sample_config') and self._multi_sample_config):
+            # Check plate name field (only if not in single or multi-sample mode)
+            plate_name_value = self.plate_name_var.get().strip()
+            if not plate_name_value:
+                errors.append("Plate name is required")
+            elif plate_name_value == "other" and not self.plate_name_other_var.get().strip():
+                errors.append("Please specify the plate name when 'other' is selected")
+        
+        # Sample type is always required
+        sample_type_value = self.sample_type_var.get().strip()
+        if not sample_type_value:
+            errors.append("Sample type is required")
+        elif sample_type_value == "other" and not self.sample_type_other_var.get().strip():
+            errors.append("Please specify the sample type when 'other' is selected")
+        
+        # Group Level 1 is required except for "unused" wells
+        if sample_type_value != "unused" and not self.group1_var.get().strip():
+            errors.append("Group Level 1 is required")
+        
+        # Validate cell count if provided
+        cell_count = self.cell_count_var.get().strip()
+        if cell_count and not self._validate_cell_count(cell_count):
+            errors.append("Cell count must be a non-negative integer")
+        
+        return len(errors) == 0, errors

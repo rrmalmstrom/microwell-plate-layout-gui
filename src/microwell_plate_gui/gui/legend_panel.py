@@ -41,8 +41,8 @@ class LegendPanel:
         )
         self.title_label.pack(pady=(0, 10))
         
-        # Scrollable frame for legend content - increased height for better visibility
-        self.canvas = tk.Canvas(self.main_frame, height=300)
+        # Scrollable frame for legend content - responsive height based on available space
+        self.canvas = tk.Canvas(self.main_frame)  # Remove fixed height for responsive sizing
         self.scrollbar = ttk.Scrollbar(self.main_frame, orient="vertical", command=self.canvas.yview)
         self.scrollable_frame = ttk.Frame(self.canvas)
         
@@ -54,6 +54,7 @@ class LegendPanel:
         self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
         
+        # Use pack for consistency with existing layout
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
         

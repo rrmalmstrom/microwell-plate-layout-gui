@@ -31,7 +31,6 @@ class TestMetadataPanel:
         
         # Mock database manager
         self.mock_db = Mock(spec=DatabaseManager)
-        self.mock_db.get_existing_projects.return_value = ["Project1", "Project2", "Project3"]
         self.mock_db.get_existing_samples.return_value = ["Sample1", "Sample2", "Sample3"]
         self.mock_db.generate_plate_names.return_value = ["Project1.Sample1.1", "Project1.Sample1.2"]
         
@@ -53,7 +52,6 @@ class TestMetadataPanel:
         assert isinstance(panel.main_frame, ttk.Frame)
         
         # Verify all required form fields exist
-        assert hasattr(panel, 'project_var')
         assert hasattr(panel, 'sample_var')
         assert hasattr(panel, 'plate_name_var')
         assert hasattr(panel, 'sample_type_var')
@@ -63,7 +61,6 @@ class TestMetadataPanel:
         assert hasattr(panel, 'group3_var')
         
         # Verify StringVar types
-        assert isinstance(panel.project_var, tk.StringVar)
         assert isinstance(panel.sample_var, tk.StringVar)
         assert isinstance(panel.plate_name_var, tk.StringVar)
         assert isinstance(panel.sample_type_var, tk.StringVar)
@@ -77,24 +74,16 @@ class TestMetadataPanel:
         panel = MetadataPanel(self.root, self.mock_db)
         
         # Verify database methods were called
-        self.mock_db.get_existing_projects.assert_called_once()
         self.mock_db.get_existing_samples.assert_called_once()
         
-        # Verify project dropdown has correct values
-        assert hasattr(panel, 'project_combo')
-        assert isinstance(panel.project_combo, ttk.Combobox)
-        project_values = panel.project_combo['values']
-        assert "Project1" in project_values
-        assert "Project2" in project_values
-        assert "Project3" in project_values
-        
-        # Verify sample dropdown has correct values
+        # Verify sample dropdown has correct values including "other"
         assert hasattr(panel, 'sample_combo')
         assert isinstance(panel.sample_combo, ttk.Combobox)
         sample_values = panel.sample_combo['values']
         assert "Sample1" in sample_values
         assert "Sample2" in sample_values
         assert "Sample3" in sample_values
+        assert "other" in sample_values
         
         # Verify sample type dropdown has predefined values
         assert hasattr(panel, 'sample_type_combo')
@@ -107,24 +96,24 @@ class TestMetadataPanel:
         assert "other" in sample_type_values
     
     def test_dynamic_plate_name_dropdown(self):
-        """Test that plate name dropdown updates when project/sample changes."""
+        """Test that plate name dropdown updates when sample changes."""
         panel = MetadataPanel(self.root, self.mock_db)
         
-        # Set project and sample
-        panel.project_var.set("Project1")
+        # Set sample (no project in new workflow)
         panel.sample_var.set("Sample1")
         
         # Trigger the update callback
         panel._update_plate_names()
         
-        # Verify generate_plate_names was called with correct parameters
-        self.mock_db.generate_plate_names.assert_called_with("Project1", "Sample1")
+        # Verify generate_plate_names was called with correct parameters (empty project)
+        self.mock_db.generate_plate_names.assert_called_with("", "Sample1")
         
         # Verify plate name dropdown was updated
         assert hasattr(panel, 'plate_name_combo')
         plate_name_values = panel.plate_name_combo['values']
         assert "Project1.Sample1.1" in plate_name_values
         assert "Project1.Sample1.2" in plate_name_values
+        assert "other" in plate_name_values
     
     def test_form_validation(self):
         """Test basic form validation functionality."""
@@ -135,8 +124,7 @@ class TestMetadataPanel:
         assert not is_valid
         assert len(errors) > 0
         
-        # Test with required fields filled
-        panel.project_var.set("Project1")
+        # Test with required fields filled (no project field in new workflow)
         panel.sample_var.set("Sample1")
         panel.plate_name_var.set("Project1.Sample1.1")
         panel.sample_type_var.set("sample")
@@ -178,7 +166,6 @@ class TestMetadataPanel:
         
         # Verify labels and widgets are properly arranged
         # This tests the Context7 grid layout implementation
-        assert hasattr(panel, 'project_label')
         assert hasattr(panel, 'sample_label')
         assert hasattr(panel, 'plate_name_label')
         assert hasattr(panel, 'sample_type_label')
@@ -188,7 +175,6 @@ class TestMetadataPanel:
         assert hasattr(panel, 'group3_label')
         
         # Verify all labels are ttk.Label instances
-        assert isinstance(panel.project_label, ttk.Label)
         assert isinstance(panel.sample_label, ttk.Label)
         assert isinstance(panel.plate_name_label, ttk.Label)
         assert isinstance(panel.sample_type_label, ttk.Label)
@@ -201,8 +187,7 @@ class TestMetadataPanel:
         """Test retrieving all metadata values as dictionary."""
         panel = MetadataPanel(self.root, self.mock_db)
         
-        # Set all values
-        panel.project_var.set("Project1")
+        # Set all values (no project in new workflow)
         panel.sample_var.set("Sample1")
         panel.plate_name_var.set("Project1.Sample1.1")
         panel.sample_type_var.set("sample")
@@ -213,7 +198,6 @@ class TestMetadataPanel:
         
         metadata = panel.get_metadata()
         
-        assert metadata['project'] == "Project1"
         assert metadata['sample'] == "Sample1"
         assert metadata['plate_name'] == "Project1.Sample1.1"
         assert metadata['sample_type'] == "sample"
@@ -226,8 +210,7 @@ class TestMetadataPanel:
         """Test clearing all form fields."""
         panel = MetadataPanel(self.root, self.mock_db)
         
-        # Set all values
-        panel.project_var.set("Project1")
+        # Set all values (no project in new workflow)
         panel.sample_var.set("Sample1")
         panel.plate_name_var.set("Project1.Sample1.1")
         panel.sample_type_var.set("sample")
@@ -240,7 +223,6 @@ class TestMetadataPanel:
         panel.clear_form()
         
         # Verify all fields are empty
-        assert panel.project_var.get() == ""
         assert panel.sample_var.get() == ""
         assert panel.plate_name_var.get() == ""
         assert panel.sample_type_var.get() == ""
@@ -281,16 +263,13 @@ class TestMetadataPanelIntegration:
         panel = MetadataPanel(self.root, self.db_manager)
         
         # Verify dropdowns are populated with real data
-        project_values = panel.project_combo['values']
         sample_values = panel.sample_combo['values']
         
         # Should have some values from real database
-        assert len(project_values) > 0
         assert len(sample_values) > 0
         
         # Test dynamic plate name generation with real data
-        if len(project_values) > 0 and len(sample_values) > 0:
-            panel.project_var.set(project_values[0])
+        if len(sample_values) > 0:
             panel.sample_var.set(sample_values[0])
             panel._update_plate_names()
             

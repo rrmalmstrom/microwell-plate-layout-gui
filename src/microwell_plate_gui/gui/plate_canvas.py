@@ -53,7 +53,7 @@ class PlateCanvas:
         self.canvas_width = (self.cols * (well_size + well_spacing)) + well_spacing + 60  # Extra for labels
         self.canvas_height = (self.rows * (well_size + well_spacing)) + well_spacing + 60  # Extra for labels
         
-        # Create canvas
+        # Create canvas with fixed dimensions
         self.canvas = tk.Canvas(
             parent,
             width=self.canvas_width,
@@ -1138,3 +1138,4 @@ class PlateCanvas:
                 except tk.TclError:
                     pass  # Item already deleted
             well_info['pattern_overlays'] = []
+    

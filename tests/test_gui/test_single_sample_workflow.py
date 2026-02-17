@@ -33,7 +33,6 @@ class TestSingleSampleWorkflow:
         
         # Mock database manager
         self.mock_db = Mock(spec=DatabaseManager)
-        self.mock_db.get_existing_projects.return_value = ["Project1", "Project2"]
         self.mock_db.get_existing_samples.return_value = ["Sample1", "Sample2"]
         self.mock_db.generate_plate_names.return_value = ["Project1.Sample1.1", "Project1.Sample1.2"]
         
