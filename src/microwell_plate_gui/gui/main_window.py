@@ -622,11 +622,11 @@ class MainWindow:
         self.metadata_frame = ttk.Frame(self.right_paned_window)
         self.legend_frame = ttk.Frame(self.right_paned_window)
         
-        # Add frames to right paned window with better proportions
+        # Add frames to right paned window with improved proportions for Phase 4.2
         # Context7 Reference: Proper weight distribution for better visibility
-        # Metadata needs more space for form fields, legend can be smaller but scrollable
-        self.right_paned_window.add(self.metadata_frame, weight=3)
-        self.right_paned_window.add(self.legend_frame, weight=2)
+        # Reduced metadata weight to give legend more space, preventing scrollbar issues
+        self.right_paned_window.add(self.metadata_frame, weight=2)
+        self.right_paned_window.add(self.legend_frame, weight=3)
         
         # Create metadata and legend panels
         self.metadata_panel = MetadataPanel(self.metadata_frame, self.db_manager)

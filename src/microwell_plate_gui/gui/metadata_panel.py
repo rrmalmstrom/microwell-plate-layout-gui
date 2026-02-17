@@ -212,13 +212,20 @@ class MetadataPanel:
         self.group3_row = self.current_row
         self.current_row += 1
         
-        # Action buttons frame
+        # Action buttons frame - Phase 4.2 improved layout
         self.button_frame = ttk.Frame(self.main_frame)
         self.button_frame.grid(row=self.current_row, column=0, columnspan=3, pady=(15, 0), sticky="ew")
         
+        # Configure button frame for two-row layout
+        self.button_frame.columnconfigure(0, weight=1)
+        
+        # Primary action buttons frame (top row)
+        self.primary_buttons_frame = ttk.Frame(self.button_frame)
+        self.primary_buttons_frame.grid(row=0, column=0, sticky="ew", pady=(0, 5))
+        
         # Apply metadata button
         self.apply_button = ttk.Button(
-            self.button_frame,
+            self.primary_buttons_frame,
             text="Apply to Selected Wells",
             command=self._apply_metadata
         )
@@ -226,27 +233,33 @@ class MetadataPanel:
         
         # Clear form button
         self.clear_button = ttk.Button(
-            self.button_frame,
+            self.primary_buttons_frame,
             text="Clear Form",
             command=self.clear_form
         )
         self.clear_button.pack(side=tk.LEFT, padx=(0, 5))
         
-        # Clear all metadata button
+        # Reset all metadata button - using visual cues that work on macOS
         self.clear_all_button = ttk.Button(
-            self.button_frame,
-            text="Clear All Metadata",
-            command=self._clear_all_metadata
+            self.primary_buttons_frame,
+            text="🔄 Reset All Metadata",
+            command=self._clear_all_metadata,
+            width=18
         )
         self.clear_all_button.pack(side=tk.LEFT, padx=(0, 5))
         
-        # Export CSV button
+        # Export button frame (bottom row) - full width
+        self.export_frame = ttk.Frame(self.button_frame)
+        self.export_frame.grid(row=1, column=0, sticky="ew")
+        
+        # Export CSV button - prominent placement on separate row
         self.export_csv_button = ttk.Button(
-            self.button_frame,
-            text="Export CSV",
-            command=self._export_csv
+            self.export_frame,
+            text="📊 Export CSV",
+            command=self._export_csv,
+            width=20
         )
-        self.export_csv_button.pack(side=tk.LEFT)
+        self.export_csv_button.pack(pady=(5, 0))
     
     def _populate_dropdowns(self) -> None:
         """Populate dropdown widgets with data from database."""
@@ -438,73 +451,6 @@ class MetadataPanel:
             logger.error(f"Error during CSV export: {e}")
             messagebox.showerror("Export Error", f"Failed to export CSV: {str(e)}")
     
-    def validate_form(self) -> Tuple[bool, List[str]]:
-        """
-        Validate all form fields.
-        
-        Returns:
-            Tuple of (is_valid, error_messages)
-        """
-        errors = []
-        
-        # Check required fields (no project field per requirements)
-        sample_value = self.sample_var.get().strip()
-        if not sample_value:
-            errors.append("Sample is required")
-        elif sample_value == "other" and not self.sample_other_var.get().strip():
-            errors.append("Please specify the sample name when 'other' is selected")
-        
-        plate_name_value = self.plate_name_var.get().strip()
-        if not plate_name_value:
-            errors.append("Plate name is required")
-        elif plate_name_value == "other" and not self.plate_name_other_var.get().strip():
-            errors.append("Please specify the plate name when 'other' is selected")
-        
-        sample_type_value = self.sample_type_var.get().strip()
-        if not sample_type_value:
-            errors.append("Sample type is required")
-        elif sample_type_value == "other" and not self.sample_type_other_var.get().strip():
-            errors.append("Please specify the sample type when 'other' is selected")
-        
-        if not self.group1_var.get().strip():
-            errors.append("Group Level 1 is required")
-        
-        # Validate cell count if provided
-        cell_count = self.cell_count_var.get().strip()
-        if cell_count and not self._validate_cell_count(cell_count):
-            errors.append("Cell count must be a non-negative integer")
-        
-        return len(errors) == 0, errors
-    
-    def get_metadata(self) -> Dict[str, Any]:
-        """
-        Get all metadata values as dictionary.
-        
-        Returns:
-            Dictionary containing all form values
-        """
-        # Get actual values, using "other" text fields when "other" is selected
-        sample_value = self.sample_var.get().strip()
-        if sample_value == "other":
-            sample_value = self.sample_other_var.get().strip()
-        
-        plate_name_value = self.plate_name_var.get().strip()
-        if plate_name_value == "other":
-            plate_name_value = self.plate_name_other_var.get().strip()
-        
-        sample_type_value = self.sample_type_var.get().strip()
-        if sample_type_value == "other":
-            sample_type_value = self.sample_type_other_var.get().strip()
-        
-        return {
-            'sample': sample_value,
-            'plate_name': plate_name_value,
-            'sample_type': sample_type_value,
-            'cell_count': self.cell_count_var.get().strip(),
-            'group1': self.group1_var.get().strip(),
-            'group2': self.group2_var.get().strip(),
-            'group3': self.group3_var.get().strip()
-        }
     
     def clear_form(self) -> None:
         """Clear all form fields."""
