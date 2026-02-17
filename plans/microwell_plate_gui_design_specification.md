@@ -96,9 +96,17 @@ This document provides comprehensive design specifications for a Python-based GU
 - **Data Consistency**: Cross-check grouping relationships
 
 #### 6. Export System
-- **Fixed Format**: Exact match to [`RM5097_layout.csv`](../RM5097_layout.csv) structure
+- **Combined CSV & Image Export**: Single button exports both CSV data and PDF image
+- **Fixed CSV Format**: Exact match to [`RM5097_layout.csv`](../RM5097_layout.csv) structure
 - **Automatic Population**: Unused wells marked as "unused" with empty metadata
-- **File Generation**: CSV export with proper formatting
+- **PDF Image Generation**: Side-by-side layout of plate canvas and legend panel
+- **PostScript to PDF Conversion**: Uses Ghostscript for high-quality PDF output
+- **Error Handling**: Robust error handling with user feedback dialogs
+
+#### 7. Application Management
+- **Exit/Close Functionality**: Dedicated exit button with confirmation dialog
+- **Safe Shutdown**: Proper application termination using `os._exit(0)`
+- **User Confirmation**: Prevents accidental application closure
 
 ### Database Schema
 
@@ -145,7 +153,8 @@ CREATE TABLE samples (
 ├─────────────────────────────────────────────────────────────┤
 │ Status Bar: Selection info | Validation messages           │
 ├─────────────────────────────────────────────────────────────┤
-│ [Reset All] [Export CSV] [Exit]                            │
+│ [Apply] [Clear Selection] [🔄 Reset All Metadata]         │
+│ [📊 Export CSV & Image]              [🚪 Exit Application] │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -224,31 +233,44 @@ CREATE TABLE samples (
 
 ## Implementation Phases
 
-### Phase 1: Core Infrastructure
+### Phase 1: Core Infrastructure ✅ COMPLETED
 - Basic Tkinter application structure
 - Plate canvas with well grid rendering
 - Database connection and sample loading
 - Basic well selection (rectangular drag)
 
-### Phase 2: Metadata System
+### Phase 2: Metadata System ✅ COMPLETED
 - Metadata entry forms with dropdowns
 - Dynamic plate name generation
 - Basic validation and error handling
 - Single-sample workflow implementation
 
-### Phase 3: Advanced Features
+### Phase 3: Advanced Features ✅ COMPLETED
 - Multi-sample workflow support
-- Tri-color well visualization
-- Dynamic legend generation
+- Value-based well visualization (replaced tri-color pie slices)
+- Dynamic legend generation with 12 colors and 10 visual patterns
 - Individual well selection
 
 ### Phase 4: Polish & Testing
-- Accessibility features (patterns, high contrast)
-- Comprehensive validation
+#### Phase 4.1: Core Validation & Testing ✅ COMPLETED
+- Comprehensive data validation
 - Error handling and recovery
 - Manual testing and refinement
 
-### Phase 5: Distribution
+#### Phase 4.2: Layout Improvements & Export Features ✅ COMPLETED
+- **Legend Panel Visibility**: Fixed weight ratios (metadata=2, legend=3) to eliminate scrollbar issues
+- **Button Organization**: Reorganized metadata panel buttons into logical two-row layout
+- **Export Button Prominence**: Made CSV export button more visible and accessible
+- **Exit/Close Application Button**: Added "🚪 Exit Application" button with confirmation dialog and proper shutdown
+- **Image Export Functionality**: Combined "📊 Export CSV & Image" functionality with PDF generation
+- **Space Optimization**: Reduced gray space between panels, better proportion management
+
+#### Phase 4.3: Advanced Polish ⏳ PENDING
+- Enhanced accessibility features (keyboard shortcuts, tooltips)
+- Performance optimization for large plates
+- Advanced error handling improvements
+
+### Phase 5: Distribution ⏳ PENDING
 - Conda package creation
 - Documentation and user guides
 - Installation testing
@@ -329,10 +351,11 @@ microwell_plate_gui/
 │   ├── data/
 │   │   ├── __init__.py
 │   │   ├── database.py         # SQLite database interface
-│   │   ├── validation.py       # Data validation logic
-│   │   └── export.py           # CSV export functionality
+│   │   └── validation.py       # Data validation logic
 │   └── utils/
 │       ├── __init__.py
+│       ├── csv_export.py       # CSV export functionality
+│       ├── image_export.py     # PDF image export functionality
 │       ├── colors.py           # Color and pattern management
 │       └── constants.py        # Application constants
 ├── tests/

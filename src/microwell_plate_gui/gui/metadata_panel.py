@@ -43,6 +43,8 @@ class MetadataPanel:
         self.apply_metadata_callback = None
         self.clear_all_metadata_callback = None
         self.export_csv_callback = None
+        self.exit_callback = None
+        self.export_image_callback = None
         
         # Initialize StringVar variables for all form fields
         self.sample_var = tk.StringVar()
@@ -253,13 +255,23 @@ class MetadataPanel:
         self.export_frame.grid(row=1, column=0, sticky="ew")
         
         # Export CSV button - prominent placement on separate row
+        # Now also exports image automatically
         self.export_csv_button = ttk.Button(
             self.export_frame,
-            text="📊 Export CSV",
+            text="📊 Export CSV & Image",
             command=self._export_csv,
             width=20
         )
         self.export_csv_button.pack(pady=(5, 0))
+        
+        # Exit button - at the bottom
+        self.exit_button = ttk.Button(
+            self.export_frame,
+            text="🚪 Exit Application",
+            command=self._exit_application,
+            width=20
+        )
+        self.exit_button.pack(pady=(5, 0))
     
     def _populate_dropdowns(self) -> None:
         """Populate dropdown widgets with data from database."""
@@ -430,6 +442,14 @@ class MetadataPanel:
         """Set the callback function for exporting CSV."""
         self.export_csv_callback = callback
     
+    def set_exit_callback(self, callback):
+        """Set the callback function for exiting the application."""
+        self.exit_callback = callback
+    
+    def set_export_image_callback(self, callback):
+        """Set the callback function for exporting images."""
+        self.export_image_callback = callback
+    
     def _clear_all_metadata(self) -> None:
         """Clear all metadata from all wells."""
         if self.clear_all_metadata_callback:
@@ -440,16 +460,93 @@ class MetadataPanel:
     
     def _export_csv(self) -> None:
         """Export plate layout to CSV file."""
+        csv_filename = None
         try:
             if self.export_csv_callback:
-                self.export_csv_callback()
-                logger.info("CSV export initiated")
+                # The CSV export callback should return the filename
+                csv_filename = self.export_csv_callback()
+                logger.info(f"CSV export completed: {csv_filename}")
             else:
                 logger.warning("No export_csv_callback set")
                 messagebox.showerror("Export Error", "CSV export functionality not available")
+                return
         except Exception as e:
             logger.error(f"Error during CSV export: {e}")
             messagebox.showerror("Export Error", f"Failed to export CSV: {str(e)}")
+            return
+        
+        # After successful CSV export, also export image automatically
+        try:
+            if self.export_image_callback and csv_filename:
+                # Generate image filename based on CSV filename
+                image_filename = csv_filename.replace('.csv', '_layout.pdf')
+                
+                logger.info(f"Attempting automatic image export to: {image_filename}")
+                success = self.export_image_callback(image_filename)
+                if success:
+                    logger.info(f"Image export completed successfully: {image_filename}")
+                    # Show success message for image export too
+                    messagebox.showinfo(
+                        "Export Complete",
+                        f"Both CSV and image exported successfully!\n\nCSV: {csv_filename}\nImage: {image_filename}"
+                    )
+                else:
+                    logger.warning(f"Image export failed: {image_filename}")
+                    messagebox.showwarning(
+                        "Partial Export",
+                        f"CSV exported successfully, but image export failed.\n\nCSV: {csv_filename}\nImage export failed: {image_filename}"
+                    )
+            else:
+                if not self.export_image_callback:
+                    logger.warning("No export_image_callback set for automatic image export")
+                    messagebox.showwarning(
+                        "Image Export Unavailable",
+                        f"CSV exported successfully, but image export is not configured.\n\nCSV: {csv_filename or 'Unknown'}"
+                    )
+                elif not csv_filename:
+                    logger.warning("No CSV filename available for image export")
+                    messagebox.showwarning(
+                        "Image Export Unavailable",
+                        "CSV exported successfully, but filename not available for image export."
+                    )
+                
+        except Exception as e:
+            logger.error(f"Error during automatic image export: {e}")
+            messagebox.showwarning(
+                "Image Export Error",
+                f"CSV exported successfully, but image export encountered an error.\n\nCSV: {csv_filename or 'Unknown'}\nError: {str(e)}"
+            )
+    
+    def _exit_application(self) -> None:
+        """Exit the application with confirmation dialog."""
+        try:
+            # Show confirmation dialog
+            result = messagebox.askyesno(
+                "Exit Application",
+                "Are you sure you want to exit the application?\n\nAny unsaved changes will be lost."
+            )
+            
+            if result:  # User confirmed exit
+                logger.info("Application exit confirmed by user")
+                if self.exit_callback:
+                    self.exit_callback()
+                else:
+                    # Fallback: terminate the application completely
+                    import sys
+                    import os
+                    self.parent.quit()
+                    self.parent.destroy()
+                    os._exit(0)  # Force exit the Python process
+            else:
+                logger.info("Application exit cancelled by user")
+                
+        except Exception as e:
+            logger.error(f"Error during application exit: {e}")
+            messagebox.showerror("Exit Error", f"An error occurred while exiting: {str(e)}")
+            # Force exit even if there's an error
+            import sys
+            import os
+            os._exit(1)
     
     
     def clear_form(self) -> None:

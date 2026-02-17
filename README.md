@@ -7,8 +7,10 @@ A Python-based GUI tool for designing microwell plate layouts and generating sta
 - Support for 96-well and 384-well plates
 - Visual well selection with drag and click
 - Metadata management with database integration
-- Tri-color well visualization for grouping levels
-- CSV export matching laboratory standards
+- Value-based well visualization with 12 colors and 10 visual patterns
+- Combined CSV & PDF image export functionality
+- Exit application with confirmation dialog
+- Optimized layout with improved panel visibility
 - Accessibility features for colorblind users
 
 ## Installation
@@ -25,24 +27,35 @@ A Python-based GUI tool for designing microwell plate layouts and generating sta
 
 ## Development Status
 
-- ✅ Phase 0: Development Environment Setup
-- 🔄 Phase 1: Core Infrastructure (In Progress)
-- ⏳ Phase 2: Metadata System
-- ⏳ Phase 3: Advanced Features
-- ⏳ Phase 4: Validation & Polish
-- ⏳ Phase 5: Export & Distribution
+- ✅ Phase 1: Core Infrastructure
+- ✅ Phase 2: Metadata System
+- ✅ Phase 3: Advanced Features
+- ✅ Phase 4.1: Core Validation & Testing
+- ✅ Phase 4.2: Layout Improvements & Export Features
+- 🔄 Phase 4.3: Advanced Polish (Next)
+- ⏳ Phase 5: Distribution
+
+### Recent Completion: Phase 4.2 Features
+- **Layout Improvements**: Optimized panel weight ratios and button organization
+- **Exit Application**: Safe application closure with confirmation dialog
+- **Image Export**: Combined CSV & PDF image export functionality
+- **Enhanced UX**: Better button styling and responsive layout design
 
 ## Project Structure
 
 ```
 src/microwell_plate_gui/
-├── gui/          # GUI components
-├── data/         # Data management
-├── utils/        # Utility functions
+├── gui/          # GUI components (main_window, plate_canvas, metadata_panel, legend_panel)
+├── data/         # Data management (database, validation)
+├── utils/        # Utility functions (csv_export, image_export)
 └── main.py       # Application entry point
 
-tests/            # Test suite
-plans/            # Design documentation
+tests/            # Comprehensive test suite
+├── test_gui/     # GUI component tests
+├── test_data/    # Data management tests
+└── test_utils/   # Utility function tests
+
+plans/            # Design documentation and specifications
 ```
 
 ## Documentation

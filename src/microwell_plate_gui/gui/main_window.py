@@ -841,6 +841,12 @@ class MainWindow:
             # Set up CSV export callback
             self.metadata_panel.set_export_csv_callback(self._export_csv)
             
+            # Set up image export callback
+            self.metadata_panel.set_export_image_callback(self._export_image)
+            
+            # Set up exit callback
+            self.metadata_panel.set_exit_callback(self._exit_application)
+            
             # Set up well selection callback for logging and UI updates
             def on_well_selection_changed(selected_wells):
                 print(f"Wells selected: {selected_wells}")
@@ -887,7 +893,7 @@ class MainWindow:
                     "Export Warning",
                     "No metadata found on plate. Please add metadata to wells before exporting."
                 )
-                return
+                return None
             
             # Get default filename based on plate name
             default_filename = self._get_default_export_filename()
@@ -901,7 +907,7 @@ class MainWindow:
             )
             
             if not filename:  # User cancelled
-                return
+                return None
             
             # Perform the export
             exported_file = export_plate_layout(self.plate_canvas, self, filename)
@@ -913,13 +919,16 @@ class MainWindow:
             )
             
             logger.info(f"CSV export completed: {exported_file}")
+            return exported_file  # Return the filename for image export
             
         except CSVExportError as e:
             logger.error(f"CSV export error: {e}")
             messagebox.showerror("Export Error", str(e))
+            return None
         except Exception as e:
             logger.error(f"Unexpected export error: {e}")
             messagebox.showerror("Export Error", f"An unexpected error occurred: {str(e)}")
+            return None
     
     def _get_default_export_filename(self) -> str:
         """
@@ -945,3 +954,65 @@ class MainWindow:
             safe_name += '.csv'
         
         return safe_name
+    
+    def _export_image(self, filename: str) -> bool:
+        """
+        Export plate layout and legend as image file.
+        
+        Args:
+            filename: Target file path for the exported image
+            
+        Returns:
+            bool: True if export successful, False otherwise
+        """
+        try:
+            from ..utils.image_export import ImageExporter
+            
+            # Validate that we have components to export
+            if not self.plate_canvas or not self.legend_panel:
+                logger.error("Missing plate canvas or legend panel for image export")
+                return False
+            
+            # Create image exporter and perform export
+            # Pass the actual canvas widget, not the PlateCanvas wrapper
+            exporter = ImageExporter()
+            success = exporter.capture_plate_and_legend(
+                self.plate_canvas.canvas,  # Use the actual tkinter Canvas widget
+                self.legend_panel,
+                filename
+            )
+            
+            if success:
+                logger.info(f"Image export completed successfully: {filename}")
+            else:
+                logger.error(f"Image export failed: {filename}")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error during image export: {e}")
+            return False
+    
+    def _exit_application(self) -> None:
+        """
+        Exit the application cleanly.
+        
+        Performs any necessary cleanup before closing the application.
+        """
+        try:
+            logger.info("Exiting application...")
+            
+            # Perform any cleanup here if needed
+            # For example: save settings, close database connections, etc.
+            
+            # Close the main window and terminate the Python process
+            self.quit()
+            self.destroy()
+            import os
+            os._exit(0)  # Force exit the Python process
+            
+        except Exception as e:
+            logger.error(f"Error during application exit: {e}")
+            # Force quit even if there's an error
+            import os
+            os._exit(1)
