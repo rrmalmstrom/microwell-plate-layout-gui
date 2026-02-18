@@ -816,6 +816,124 @@ class MainWindow:
             foreground="navy"
         )
         config_label.pack(anchor=tk.CENTER, pady=5)
+        
+        # Add pattern selection panel
+        self._create_pattern_selection_panel()
+    
+    def _create_pattern_selection_panel(self):
+        """Create a panel with four pattern selection buttons."""
+        # Create pattern selection frame
+        if not hasattr(self, 'pattern_selection_frame'):
+            self.pattern_selection_frame = None
+            
+        if self.pattern_selection_frame:
+            self.pattern_selection_frame.destroy()
+        
+        self.pattern_selection_frame = ttk.LabelFrame(
+            self.plate_frame,
+            text="Pattern Selection",
+            padding="10"
+        )
+        self.pattern_selection_frame.pack(fill=tk.X, padx=15, pady=(5, 10))
+        
+        # Create a grid layout for the four buttons (2x2)
+        button_frame = ttk.Frame(self.pattern_selection_frame)
+        button_frame.pack(expand=True)
+        
+        # Configure grid weights for even distribution
+        button_frame.grid_columnconfigure(0, weight=1)
+        button_frame.grid_columnconfigure(1, weight=1)
+        button_frame.grid_rowconfigure(0, weight=1)
+        button_frame.grid_rowconfigure(1, weight=1)
+        
+        # Upper Left Button (odd rows, odd columns)
+        self.upper_left_button = tk.Button(
+            button_frame,
+            text="Upper Left\n(Odd Rows, Odd Cols)",
+            command=self._on_pattern_upper_left,
+            font=("Arial", 10),
+            padx=10,
+            pady=8,
+            bg="#E8F4FD",
+            relief="raised",
+            borderwidth=2
+        )
+        self.upper_left_button.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        
+        # Upper Right Button (odd rows, even columns)
+        self.upper_right_button = tk.Button(
+            button_frame,
+            text="Upper Right\n(Odd Rows, Even Cols)",
+            command=self._on_pattern_upper_right,
+            font=("Arial", 10),
+            padx=10,
+            pady=8,
+            bg="#FDF4E8",
+            relief="raised",
+            borderwidth=2
+        )
+        self.upper_right_button.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+        
+        # Lower Left Button (even rows, odd columns)
+        self.lower_left_button = tk.Button(
+            button_frame,
+            text="Lower Left\n(Even Rows, Odd Cols)",
+            command=self._on_pattern_lower_left,
+            font=("Arial", 10),
+            padx=10,
+            pady=8,
+            bg="#F4E8FD",
+            relief="raised",
+            borderwidth=2
+        )
+        self.lower_left_button.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
+        
+        # Lower Right Button (even rows, even columns)
+        self.lower_right_button = tk.Button(
+            button_frame,
+            text="Lower Right\n(Even Rows, Even Cols)",
+            command=self._on_pattern_lower_right,
+            font=("Arial", 10),
+            padx=10,
+            pady=8,
+            bg="#E8FDF4",
+            relief="raised",
+            borderwidth=2
+        )
+        self.lower_right_button.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
+        
+        # Add instruction label
+        instruction_label = ttk.Label(
+            self.pattern_selection_frame,
+            text="Click a pattern button to automatically select wells in that pattern",
+            font=("Arial", 9),
+            foreground="gray"
+        )
+        instruction_label.pack(pady=(5, 0))
+    
+    def _on_pattern_upper_left(self):
+        """Handle upper left pattern button click."""
+        if self.plate_canvas:
+            self.plate_canvas.select_pattern_upper_left()
+            print("Selected upper left pattern (odd rows, odd columns)")
+    
+    def _on_pattern_lower_left(self):
+        """Handle lower left pattern button click."""
+        if self.plate_canvas:
+            self.plate_canvas.select_pattern_lower_left()
+            print("Selected lower left pattern (even rows, odd columns)")
+    
+    def _on_pattern_upper_right(self):
+        """Handle upper right pattern button click."""
+        if self.plate_canvas:
+            self.plate_canvas.select_pattern_upper_right()
+            print("Selected upper right pattern (odd rows, even columns)")
+    
+    def _on_pattern_lower_right(self):
+        """Handle lower right pattern button click."""
+        if self.plate_canvas:
+            self.plate_canvas.select_pattern_lower_right()
+            print("Selected lower right pattern (even rows, even columns)")
     
     def _setup_well_selection_integration(self):
         """Setup integration between plate canvas, metadata panel, and legend panel."""

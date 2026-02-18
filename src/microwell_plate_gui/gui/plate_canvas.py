@@ -1139,3 +1139,151 @@ class PlateCanvas:
                     pass  # Item already deleted
             well_info['pattern_overlays'] = []
     
+    # Pattern Selection Methods
+    
+    def select_pattern_upper_left(self) -> None:
+        """
+        Select wells in odd rows AND odd columns (upper left pattern).
+        
+        This pattern selects wells where both row and column indices are odd
+        (using 1-based indexing: rows A,C,E,G... and columns 1,3,5,7...).
+        """
+        pattern_wells = set()
+        
+        for well_name, well_info in self.wells.items():
+            row = well_info['row']  # 0-based
+            col = well_info['col']  # 0-based
+            
+            # Convert to 1-based for odd/even check
+            row_1based = row + 1
+            col_1based = col + 1
+            
+            # Select if both row and column are odd (1-based)
+            if row_1based % 2 == 1 and col_1based % 2 == 1:
+                pattern_wells.add(well_name)
+        
+        # Apply the pattern selection
+        self.set_selected_wells(pattern_wells)
+        
+        # Notify callback of selection change
+        if self.selection_callback:
+            self.selection_callback(self.selected_wells.copy())
+    
+    def select_pattern_lower_left(self) -> None:
+        """
+        Select wells in even rows AND odd columns (lower left pattern).
+        
+        This pattern selects wells where row indices are even and column indices are odd
+        (using 1-based indexing: rows B,D,F,H... and columns 1,3,5,7...).
+        """
+        pattern_wells = set()
+        
+        for well_name, well_info in self.wells.items():
+            row = well_info['row']  # 0-based
+            col = well_info['col']  # 0-based
+            
+            # Convert to 1-based for odd/even check
+            row_1based = row + 1
+            col_1based = col + 1
+            
+            # Select if row is even and column is odd (1-based)
+            if row_1based % 2 == 0 and col_1based % 2 == 1:
+                pattern_wells.add(well_name)
+        
+        # Apply the pattern selection
+        self.set_selected_wells(pattern_wells)
+        
+        # Notify callback of selection change
+        if self.selection_callback:
+            self.selection_callback(self.selected_wells.copy())
+    
+    def select_pattern_upper_right(self) -> None:
+        """
+        Select wells in odd rows AND even columns (upper right pattern).
+        
+        This pattern selects wells where row indices are odd and column indices are even
+        (using 1-based indexing: rows A,C,E,G... and columns 2,4,6,8...).
+        """
+        pattern_wells = set()
+        
+        for well_name, well_info in self.wells.items():
+            row = well_info['row']  # 0-based
+            col = well_info['col']  # 0-based
+            
+            # Convert to 1-based for odd/even check
+            row_1based = row + 1
+            col_1based = col + 1
+            
+            # Select if row is odd and column is even (1-based)
+            if row_1based % 2 == 1 and col_1based % 2 == 0:
+                pattern_wells.add(well_name)
+        
+        # Apply the pattern selection
+        self.set_selected_wells(pattern_wells)
+        
+        # Notify callback of selection change
+        if self.selection_callback:
+            self.selection_callback(self.selected_wells.copy())
+    
+    def select_pattern_lower_right(self) -> None:
+        """
+        Select wells in even rows AND even columns (lower right pattern).
+        
+        This pattern selects wells where both row and column indices are even
+        (using 1-based indexing: rows B,D,F,H... and columns 2,4,6,8...).
+        """
+        pattern_wells = set()
+        
+        for well_name, well_info in self.wells.items():
+            row = well_info['row']  # 0-based
+            col = well_info['col']  # 0-based
+            
+            # Convert to 1-based for odd/even check
+            row_1based = row + 1
+            col_1based = col + 1
+            
+            # Select if both row and column are even (1-based)
+            if row_1based % 2 == 0 and col_1based % 2 == 0:
+                pattern_wells.add(well_name)
+        
+        # Apply the pattern selection
+        self.set_selected_wells(pattern_wells)
+        
+        # Notify callback of selection change
+        if self.selection_callback:
+            self.selection_callback(self.selected_wells.copy())
+    
+    def add_pattern_to_selection(self, pattern_type: str) -> None:
+        """
+        Add a pattern to the current selection (additive selection).
+        
+        Args:
+            pattern_type: One of 'upper_left', 'lower_left', 'upper_right', 'lower_right'
+        """
+        pattern_wells = set()
+        
+        for well_name, well_info in self.wells.items():
+            row = well_info['row']  # 0-based
+            col = well_info['col']  # 0-based
+            
+            # Convert to 1-based for odd/even check
+            row_1based = row + 1
+            col_1based = col + 1
+            
+            # Determine if well matches the pattern
+            matches_pattern = False
+            if pattern_type == 'upper_left':
+                matches_pattern = (row_1based % 2 == 1 and col_1based % 2 == 1)
+            elif pattern_type == 'lower_left':
+                matches_pattern = (row_1based % 2 == 0 and col_1based % 2 == 1)
+            elif pattern_type == 'upper_right':
+                matches_pattern = (row_1based % 2 == 1 and col_1based % 2 == 0)
+            elif pattern_type == 'lower_right':
+                matches_pattern = (row_1based % 2 == 0 and col_1based % 2 == 0)
+            
+            if matches_pattern:
+                pattern_wells.add(well_name)
+        
+        # Add to current selection
+        self.add_to_selection(pattern_wells)
+    
