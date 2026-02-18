@@ -15,9 +15,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from microwell_plate_gui.gui.main_window import MainWindow
 
 
-def main():
+def main(project_directory=None):
     """
     Main entry point for the application.
+    
+    Args:
+        project_directory (str, optional): Path to the project directory where data files are located.
+                                         If None, uses current working directory.
     
     Context7 Reference: Standard Tkinter application startup pattern
     - Create root window
@@ -26,11 +30,21 @@ def main():
     - Start main loop
     """
     try:
+        # Set the project directory (where user data files are located)
+        if project_directory is None:
+            project_directory = os.getcwd()
+        
+        # Ensure the project directory exists
+        if not os.path.isdir(project_directory):
+            raise ValueError(f"Project directory does not exist: {project_directory}")
+        
+        print(f"📁 Project directory: {project_directory}")
+        
         # Create root window
         root = tk.Tk()
         
-        # Create main window
-        app = MainWindow(root)
+        # Create main window with project directory
+        app = MainWindow(root, project_directory)
         
         # Show startup dialog
         if not app.show_startup_dialog():

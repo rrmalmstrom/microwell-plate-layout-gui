@@ -28,13 +28,13 @@ if [ ! -f "environment.yml" ]; then
 fi
 
 # Check if the environment already exists
-if conda env list | grep -q "microwell-plate-gui"; then
-    echo "⚠️  Environment 'microwell-plate-gui' already exists."
+if conda env list | grep -q "microwell-gui-dev"; then
+    echo "⚠️  Environment 'microwell-gui-dev' already exists."
     read -p "Do you want to remove and recreate it? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "🗑️  Removing existing environment..."
-        conda env remove -n microwell-plate-gui -y
+        conda env remove -n microwell-gui-dev -y
     else
         echo "✅ Using existing environment."
         echo "Setup complete! You can now run: ./launch_microwell_gui.sh"
@@ -43,7 +43,7 @@ if conda env list | grep -q "microwell-plate-gui"; then
 fi
 
 # Create the conda environment
-echo "📦 Creating conda environment 'microwell-plate-gui'..."
+echo "📦 Creating conda environment 'microwell-gui-dev'..."
 echo "This may take a few minutes to download and install packages..."
 conda env create -f environment.yml
 
@@ -57,7 +57,7 @@ fi
 
 # Test that the environment works
 echo "🧪 Testing the environment..."
-conda activate microwell-plate-gui
+conda activate microwell-gui-dev
 
 # Check if we can import the main modules
 python -c "import tkinter; import sqlite3; import pandas; import numpy; print('✅ All required modules available')" || {
@@ -71,6 +71,6 @@ echo ""
 echo "To run the application daily, simply use:"
 echo "  ./launch_microwell_gui.sh"
 echo ""
-echo "The setup created a conda environment called 'microwell-plate-gui'"
+echo "The setup created a conda environment called 'microwell-gui-dev'"
 echo "that contains all the required dependencies."
 echo ""

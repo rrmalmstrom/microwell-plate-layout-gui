@@ -11,6 +11,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from typing import Optional, Callable
 import logging
+import os
 from .metadata_panel import MetadataPanel
 from .plate_canvas import PlateCanvas
 from .legend_panel import LegendPanel
@@ -559,21 +560,30 @@ class MainWindow:
     - Standard widget configuration patterns
     """
     
-    def __init__(self, root: tk.Tk, db_path: str = "example_database.db"):
+    def __init__(self, root: tk.Tk, project_directory: str = None):
         """
         Initialize main window.
         
         Args:
             root: Tkinter root window
-            db_path: Path to SQLite database file
+            project_directory: Path to project directory containing database files
         """
         self.root = root
         self.plate_type = None
         self.sample_mode = None
-        self.db_path = db_path
+        
+        # Set project directory and construct database path
+        if project_directory is None:
+            project_directory = os.getcwd()
+        
+        self.project_directory = project_directory
+        self.db_path = os.path.join(project_directory, "example_database.db")
+        
+        print(f"📁 Project directory: {self.project_directory}")
+        print(f"🗄️ Database path: {self.db_path}")
         
         # Initialize database manager
-        self.db_manager = DatabaseManager(db_path)
+        self.db_manager = DatabaseManager(self.db_path)
         
         # Workflow state for single-sample mode
         self.single_sample_config = None  # Will store sample and plate_name
@@ -1021,7 +1031,8 @@ class MainWindow:
                 title="Export Plate Layout",
                 defaultextension=".csv",
                 filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
-                initialfile=default_filename
+                initialfile=default_filename,
+                initialdir=self.project_directory
             )
             
             if not filename:  # User cancelled
