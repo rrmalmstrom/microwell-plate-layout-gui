@@ -160,8 +160,8 @@ class LegendPanel:
             pattern_canvas = tk.Canvas(row_frame, width=20, height=20, highlightthickness=0)
             pattern_canvas.pack(side=tk.LEFT, padx=(0, 5))
             
-            # Create base rectangle
-            pattern_canvas.create_rectangle(2, 2, 18, 18, fill="lightblue", outline="black")
+            # Create base rectangle with neutral gray background to show patterns are overlays, not colors
+            pattern_canvas.create_rectangle(2, 2, 18, 18, fill="lightgray", outline="black")
             
             # Add visual pattern overlay
             if pattern:
@@ -180,23 +180,18 @@ class LegendPanel:
             pattern_type: Type of pattern ("dots", "lines", "cross", "grid")
         """
         if pattern_type == "dots":
-            # Match plate canvas: 8 dots in 3x3 grid (skipping center) - creates square pattern
-            dot_size = 1.5
+            # Match improved plate canvas: Single center dot for clarity
+            dot_radius = 3  # Proportional to legend canvas size
             center_x, center_y = 10, 10
-            for dx in [-4, 0, 4]:
-                for dy in [-4, 0, 4]:
-                    if dx == 0 and dy == 0:
-                        continue  # Skip center like plate canvas
-                    canvas.create_oval(
-                        center_x + dx - dot_size, center_y + dy - dot_size,
-                        center_x + dx + dot_size, center_y + dy + dot_size,
-                        fill="black", outline="black"
-                    )
+            canvas.create_oval(
+                center_x - dot_radius, center_y - dot_radius,
+                center_x + dot_radius, center_y + dot_radius,
+                fill="black", outline="black", width=1
+            )
         
         elif pattern_type == "lines":
-            # Match plate canvas: Two diagonal lines creating X pattern
-            canvas.create_line(4, 4, 16, 16, fill="black", width=2)  # Top-left to bottom-right
-            canvas.create_line(4, 16, 16, 4, fill="black", width=2)  # Bottom-left to top-right
+            # Match improved plate canvas: Single diagonal line for clarity
+            canvas.create_line(4, 4, 16, 16, fill="black", width=2)  # Single diagonal line
         
         elif pattern_type == "cross":
             # Match plate canvas: Vertical and horizontal lines creating + pattern

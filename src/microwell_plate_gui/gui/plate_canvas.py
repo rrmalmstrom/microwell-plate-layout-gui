@@ -978,30 +978,22 @@ class PlateCanvas:
             well_info['pattern_overlays'] = []
         
         if pattern_type == "dots":
-            # Add small dots
-            dot_size = 2
-            for dx in [-4, 0, 4]:
-                for dy in [-4, 0, 4]:
-                    if dx == 0 and dy == 0:
-                        continue  # Skip center
-                    dot_id = self.canvas.create_oval(
-                        center_x + dx - dot_size, center_y + dy - dot_size,
-                        center_x + dx + dot_size, center_y + dy + dot_size,
-                        fill="black", outline="black"
-                    )
-                    well_info['pattern_overlays'].append(dot_id)
+            # Add single center dot (improved visibility)
+            dot_radius = max(3, int(self.well_size * 0.15))  # 15-20% of well size, minimum 3px
+            dot_id = self.canvas.create_oval(
+                center_x - dot_radius, center_y - dot_radius,
+                center_x + dot_radius, center_y + dot_radius,
+                fill="black", outline="black", width=1
+            )
+            well_info['pattern_overlays'].append(dot_id)
                     
         elif pattern_type == "lines":
-            # Add diagonal lines
-            line_id1 = self.canvas.create_line(
+            # Add single diagonal line (improved clarity vs cross pattern)
+            line_id = self.canvas.create_line(
                 x + 3, y + 3, x + size - 3, y + size - 3,
-                fill="black", width=1
+                fill="black", width=2
             )
-            line_id2 = self.canvas.create_line(
-                x + 3, y + size - 3, x + size - 3, y + 3,
-                fill="black", width=1
-            )
-            well_info['pattern_overlays'].extend([line_id1, line_id2])
+            well_info['pattern_overlays'].append(line_id)
             
         elif pattern_type == "cross":
             # Add cross pattern
