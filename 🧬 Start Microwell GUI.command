@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Run the launch script
-./launch_microwell_gui.sh
+./_internal_launcher.sh
 
 # Keep terminal open after execution (optional)
 echo ""

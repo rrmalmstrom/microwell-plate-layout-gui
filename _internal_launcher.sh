@@ -9,7 +9,10 @@
 
 set -e  # Exit on any error
 
-echo "🧬 Starting Microwell Plate GUI..."
+# Add visual separation from system output
+echo ""
+echo ""
+echo "  🧬 Starting Microwell Plate GUI..."
 
 # Check if conda is available
 if ! command -v conda &> /dev/null; then
@@ -22,8 +25,8 @@ fi
 # Initialize conda for bash (required for conda activate)
 eval "$(conda shell.bash hook)"
 
-# Check if the environment exists (suppress conda warnings)
-if ! conda env list 2>/dev/null | grep -q "microwell-gui-dev"; then
+# Check if the environment exists
+if ! conda env list | grep -q "microwell-gui-dev"; then
     echo "❌ Error: Environment 'microwell-gui-dev' not found"
     echo "Please create the environment first:"
     echo "  conda env create -f environment.yml"
@@ -31,8 +34,8 @@ if ! conda env list 2>/dev/null | grep -q "microwell-gui-dev"; then
 fi
 
 # Activate the environment
-echo "🔧 Activating conda environment..."
-conda activate microwell-gui-dev 2>/dev/null
+echo "  🔧 Activating conda environment..."
+conda activate microwell-gui-dev
 
 # Determine the project directory (where user data files are)
 if [ $# -eq 0 ]; then
@@ -50,7 +53,7 @@ if [ $# -eq 0 ]; then
     if [ -z "$user_input" ]; then
         # User pressed enter without input, use current directory
         PROJECT_DIR="$(pwd)"
-        echo "📁 Using current directory as project directory: $PROJECT_DIR"
+        echo "  📁 Using current directory as project directory: $PROJECT_DIR"
     else
         # User provided input, validate it
         # Remove any trailing whitespace and quotes that might come from drag-drop
@@ -61,7 +64,7 @@ if [ $# -eq 0 ]; then
                 echo "❌ Error: Cannot access project directory: $user_input"
                 exit 1
             }
-            echo "📁 Using specified project directory: $PROJECT_DIR"
+            echo "  📁 Using specified project directory: $PROJECT_DIR"
         else
             echo "❌ Error: Directory does not exist: $user_input"
             exit 1
@@ -73,7 +76,7 @@ elif [ $# -eq 1 ]; then
         echo "❌ Error: Cannot access project directory: $1"
         exit 1
     }
-    echo "📁 Using specified project directory: $PROJECT_DIR"
+    echo "  📁 Using specified project directory: $PROJECT_DIR"
 else
     echo "❌ Error: Too many arguments"
     echo "Usage: $0 [project_directory]"
@@ -91,11 +94,13 @@ if [ ! -f "$SCRIPT_DIR/run_app.py" ]; then
 fi
 
 # Launch the application
-echo "🚀 Launching application..."
-echo "📦 Installation directory: $SCRIPT_DIR"
-echo "📁 Project directory: $PROJECT_DIR"
+echo "  🚀 Launching application..."
+echo "  📦 Installation directory: $SCRIPT_DIR"
+echo "  📁 Project directory: $PROJECT_DIR"
+echo ""
 
 # Run the app from installation directory, passing project directory as argument
 python "$SCRIPT_DIR/run_app.py" "$PROJECT_DIR"
 
-echo "✅ Application closed successfully"
+echo ""
+echo "  ✅ Application closed successfully"

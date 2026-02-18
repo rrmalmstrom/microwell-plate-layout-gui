@@ -37,7 +37,7 @@ if conda env list | grep -q "microwell-gui-dev"; then
         conda env remove -n microwell-gui-dev -y
     else
         echo "✅ Using existing environment."
-        echo "Setup complete! You can now run: ./launch_microwell_gui.sh"
+        echo "Setup complete! You can now double-click: 🧬 Start Microwell GUI.command"
         exit 0
     fi
 fi
@@ -48,11 +48,11 @@ echo "This may take a few minutes to download and install packages..."
 conda env create -f environment.yml
 
 # Make the launcher executable
-if [ -f "launch_microwell_gui.sh" ]; then
+if [ -f "_internal_launcher.sh" ]; then
     echo "🔧 Making launcher script executable..."
-    chmod +x launch_microwell_gui.sh
+    chmod +x _internal_launcher.sh
 else
-    echo "⚠️  Warning: launch_microwell_gui.sh not found"
+    echo "⚠️  Warning: _internal_launcher.sh not found"
 fi
 
 # Test that the environment works
@@ -68,8 +68,8 @@ python -c "import tkinter; import sqlite3; import pandas; import numpy; print('�
 echo ""
 echo "🎉 Setup complete!"
 echo ""
-echo "To run the application daily, simply use:"
-echo "  ./launch_microwell_gui.sh"
+echo "To run the application daily, simply double-click:"
+echo "  🧬 Start Microwell GUI.command"
 echo ""
 echo "The setup created a conda environment called 'microwell-gui-dev'"
 echo "that contains all the required dependencies."

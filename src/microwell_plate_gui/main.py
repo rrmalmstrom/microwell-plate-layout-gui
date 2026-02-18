@@ -38,7 +38,7 @@ def main(project_directory=None):
         if not os.path.isdir(project_directory):
             raise ValueError(f"Project directory does not exist: {project_directory}")
         
-        print(f"📁 Project directory: {project_directory}")
+        print(f"  📁 Project directory: {project_directory}")
         
         # Create root window
         root = tk.Tk()

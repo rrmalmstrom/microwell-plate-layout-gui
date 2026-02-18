@@ -32,15 +32,16 @@ A simple tool for designing microwell plate layouts and generating CSV files for
 
 ### Daily Usage
 
-After the one-time setup, simply run:
-```bash
-./launch_microwell_gui.sh
+After the one-time setup, simply **double-click**:
+```
+🧬 Start Microwell GUI.command
 ```
 
 The launcher will automatically:
 - Activate the correct conda environment
 - Start the application
 - Show helpful error messages if something goes wrong
+- Display clear status messages with proper formatting
 
 ## Features
 
@@ -70,21 +71,26 @@ The launcher will automatically:
 
 ### Daily Usage Issues
 
-**"Environment 'microwell-plate-gui' not found"**
+**"Environment 'microwell-gui-dev' not found"**
 - Run the setup script again: `./setup_microwell_gui.sh`
 
 **"run_app.py not found"**
-- Make sure you're running the launcher from the `microwell-plate-gui` directory
+- Make sure you're double-clicking the launcher from the `microwell-plate-gui` directory
 
 **Application won't start**
-- Try running: `conda activate microwell-plate-gui && python run_app.py`
-- Check Terminal for error messages
+- Try running: `conda activate microwell-gui-dev && python run_app.py`
+- Check Terminal for error messages (conda warnings and errors are now visible)
+
+**Verbose terminal output**
+- The application now shows clear, indented status messages
+- System messages from macOS Terminal are normal and can be ignored
+- All conda warnings and errors are intentionally visible for troubleshooting
 
 ## Uninstalling
 
 To remove the application:
 ```bash
-conda env remove -n microwell-plate-gui
+conda env remove -n microwell-gui-dev
 ```
 Then delete the `microwell-plate-gui` folder.
 
@@ -110,19 +116,23 @@ For issues or questions, contact [Lab Contact Information].
 
 ```
 microwell-plate-gui/
-├── README.md                    # This file
-├── setup_microwell_gui.sh       # One-time setup script
-├── launch_microwell_gui.sh      # Daily launcher script
-├── environment.yml              # Production conda environment
-├── run_app.py                   # Application entry point
-├── src/                         # Source code
+├── README.md                         # This file
+├── setup_microwell_gui.sh            # One-time setup script
+├── 🧬 Start Microwell GUI.command    # Double-click launcher (user-facing)
+├── _internal_launcher.sh             # Internal launcher script (behind-the-scenes)
+├── environment.yml                   # Production conda environment
+├── run_app.py                        # Application entry point
+├── src/                              # Source code
 │   └── microwell_plate_gui/
-│       ├── gui/                 # GUI components
-│       ├── data/                # Data management
-│       ├── utils/               # Utility functions
-│       └── main.py              # Application entry point
-├── example_database.db          # Sample data
-└── example_database.csv         # Sample data
+│       ├── gui/                      # GUI components
+│       ├── data/                     # Data management
+│       ├── utils/                    # Utility functions
+│       └── main.py                   # Application entry point
+├── test_input_data_files/            # Sample data
+│   ├── example_database.db
+│   ├── example_database.csv
+│   └── RM5097_layout.csv
+└── tests/                            # Test suite
 ```
 
 ### Development Setup
