@@ -1,0 +1,39 @@
+# Microwell Plate GUI - Conservative Environment
+# This environment includes additional packages for maximum compatibility
+# Use this if the minimal environment.yml has issues
+
+name: microwell-gui-dev
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  # Core Python runtime
+  - python>=3.8,<4.0
+  
+  # Essential dependencies
+  - ghostscript>=10.0  # Required for PDF export (ps2pdf command)
+  
+  # Conservative additions (based on your working environment)
+  # These packages are not used by your code but may resolve compatibility issues
+  - numpy>=1.20        # Data processing (unused but commonly expected)
+  - pandas>=1.5        # Data analysis (unused but commonly expected)
+  - tk>=8.6            # Explicit tkinter support
+  
+  # Package managers
+  - pip
+  
+  # Development tools (optional - uncomment if needed)
+  # - pytest>=7.0      # Testing framework
+  # - pillow>=9.0      # Image processing (only used in tests)
+
+# Notes:
+# - This environment includes packages your code doesn't actually use
+# - Provides better compatibility with systems expecting common scientific packages
+# - Larger download size but fewer potential conflicts
+# - Use this if environment.yml fails to install or run properly
+
+# Installation:
+# conda env create -f environment_conservative.yml
+# conda activate microwell-plate-gui-conservative
+# python test_environment.py

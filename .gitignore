@@ -82,3 +82,14 @@ environment-lock.yml
 debug.log
 temp/
 output/
+*.csv
+*.pdf
+*.ps
+
+# Test environments (keep only production environments)
+environment_test_*.yml
+
+# Temporary files
+.benchmarks/
+debug/logs/
+tests/temp/

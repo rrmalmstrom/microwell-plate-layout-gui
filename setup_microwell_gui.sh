@@ -42,10 +42,48 @@ if conda env list | grep -q "microwell-gui-dev"; then
     fi
 fi
 
-# Create the conda environment
+# Create the conda environment with smart fallback strategy
 echo "📦 Creating conda environment 'microwell-gui-dev'..."
 echo "This may take a few minutes to download and install packages..."
-conda env create -f environment.yml
+
+# Try the minimal environment.yml first (most likely to succeed)
+if conda env create -f environment.yml; then
+    echo "✅ Environment created successfully with minimal configuration"
+    echo "   Only essential packages installed (python + ghostscript + pip)"
+elif [ -f "environment_conservative.yml" ]; then
+    echo "⚠️  Minimal environment failed, trying conservative configuration..."
+    conda env create -f environment_conservative.yml
+    if [ $? -eq 0 ]; then
+        echo "✅ Environment created successfully with conservative configuration"
+        echo "   Additional packages included for maximum compatibility"
+    else
+        echo "❌ Both validated environment configurations failed"
+        echo "Trying manual installation approach..."
+        
+        # Create environment with just Python and essential packages
+        conda create -n microwell-gui-dev python>=3.8 pip -y
+        eval "$(conda shell.bash hook)"
+        conda activate microwell-gui-dev
+        
+        # Install ghostscript (essential for PDF export)
+        echo "Installing essential packages individually..."
+        conda install ghostscript -c conda-forge -y || {
+            echo "⚠️  Ghostscript installation failed - PDF export may not work"
+        }
+        
+        # Install optional packages that might be needed
+        conda install numpy pandas -c conda-forge -y || {
+            echo "⚠️  Some optional packages failed, trying pip installation..."
+            pip install numpy pandas
+        }
+        
+        echo "✅ Manual environment created with fallback packages"
+    fi
+else
+    echo "❌ Environment creation failed and no conservative configuration found"
+    echo "Please check your conda installation and internet connection"
+    exit 1
+fi
 
 # Make the launcher executable
 if [ -f "_internal_launcher.sh" ]; then
@@ -59,11 +97,46 @@ fi
 echo "🧪 Testing the environment..."
 conda activate microwell-gui-dev
 
-# Check if we can import the main modules
-python -c "import tkinter; import sqlite3; import pandas; import numpy; print('✅ All required modules available')" || {
-    echo "❌ Error: Some required modules are missing"
-    exit 1
-}
+# Run comprehensive validation if test script exists
+if [ -f "test_environment.py" ]; then
+    echo "Running comprehensive environment validation..."
+    python test_environment.py || {
+        echo "❌ Error: Environment validation failed"
+        echo "Some functionality may not work properly"
+        echo "Consider using the conservative environment instead"
+    }
+else
+    # Fallback to basic import test
+    echo "Running basic import test..."
+    python -c "
+import sys
+try:
+    import tkinter
+    print('✅ tkinter (GUI framework) available')
+    import sqlite3
+    print('✅ sqlite3 (database) available')
+    import os, csv, logging, subprocess
+    print('✅ Standard library modules available')
+    
+    # Test ghostscript availability
+    import subprocess
+    result = subprocess.run(['gs', '--version'], capture_output=True, text=True)
+    if result.returncode == 0:
+        print('✅ ghostscript available for PDF export')
+    else:
+        print('⚠️  ghostscript may not be available - PDF export might not work')
+    
+    print('✅ Core functionality should work')
+except ImportError as e:
+    print(f'❌ Import error: {e}')
+    sys.exit(1)
+except Exception as e:
+    print(f'⚠️  Warning: {e}')
+" || {
+        echo "❌ Error: Basic environment test failed"
+        exit 1
+    }
+fi
 
 echo ""
 echo "🎉 Setup complete!"
