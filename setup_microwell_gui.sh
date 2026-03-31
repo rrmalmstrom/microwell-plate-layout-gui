@@ -28,13 +28,13 @@ if [ ! -f "environment.yml" ]; then
 fi
 
 # Check if the environment already exists
-if conda env list | grep -q "microwell-gui-dev"; then
-    echo "⚠️  Environment 'microwell-gui-dev' already exists."
+if conda env list | grep -q "microwell-gui"; then
+    echo "⚠️  Environment 'microwell-gui' already exists."
     read -p "Do you want to remove and recreate it? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "🗑️  Removing existing environment..."
-        conda env remove -n microwell-gui-dev -y
+        conda env remove -n microwell-gui -y
     else
         echo "✅ Using existing environment."
         echo "Setup complete! You can now double-click: 🧬 Start Microwell GUI.command"
@@ -43,7 +43,7 @@ if conda env list | grep -q "microwell-gui-dev"; then
 fi
 
 # Create the conda environment with smart fallback strategy
-echo "📦 Creating conda environment 'microwell-gui-dev'..."
+echo "📦 Creating conda environment 'microwell-gui'..."
 echo "This may take a few minutes to download and install packages..."
 
 # Try the minimal environment.yml first (most likely to succeed)
@@ -61,9 +61,9 @@ elif [ -f "environment_conservative.yml" ]; then
         echo "Trying manual installation approach..."
         
         # Create environment with just Python and essential packages
-        conda create -n microwell-gui-dev python>=3.8 pip -y
+        conda create -n microwell-gui python>=3.8 pip -y
         eval "$(conda shell.bash hook)"
-        conda activate microwell-gui-dev
+        conda activate microwell-gui
         
         # Install ghostscript (essential for PDF export)
         echo "Installing essential packages individually..."
@@ -95,7 +95,7 @@ fi
 
 # Test that the environment works
 echo "🧪 Testing the environment..."
-conda activate microwell-gui-dev
+conda activate microwell-gui
 
 # Run comprehensive validation if test script exists
 if [ -f "test_environment.py" ]; then
@@ -144,6 +144,6 @@ echo ""
 echo "To run the application daily, simply double-click:"
 echo "  🧬 Start Microwell GUI.command"
 echo ""
-echo "The setup created a conda environment called 'microwell-gui-dev'"
+echo "The setup created a conda environment called 'microwell-gui'"
 echo "that contains all the required dependencies."
 echo ""

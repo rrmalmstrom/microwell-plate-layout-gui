@@ -78,6 +78,7 @@ environment-dev.yml
 environment-lock.yml
 
 # Application specific
+*.db
 *.db-journal
 debug.log
 temp/
@@ -85,6 +86,9 @@ output/
 *.csv
 *.pdf
 *.ps
+
+# Test input data (may contain real experimental data)
+test_input_data_files/
 
 # Test environments (keep only production environments)
 environment_test_*.yml

@@ -26,8 +26,8 @@ microwell-plate-gui/
 # 1. Create environment
 conda env create -f environment.yml
 
-# 2. Activate environment  
-conda activate microwell-plate-gui
+# 2. Activate environment
+conda activate microwell-gui
 
 # 3. Test installation
 python test_environment.py
@@ -40,7 +40,7 @@ python run_app.py
 ```bash
 # Use the conservative environment instead
 conda env create -f environment_conservative.yml
-conda activate microwell-plate-gui-conservative
+conda activate microwell-gui
 python test_environment.py
 python run_app.py
 ```

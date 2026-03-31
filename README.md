@@ -4,14 +4,15 @@ A graphical user interface tool for designing microwell plate layouts with autom
 
 ## 🚀 Quick Start
 
-### For End Users
-1. **Install**: Run `./setup_microwell_gui.sh` (one-time setup)
-2. **Launch**: Double-click `🧬 Start Microwell GUI.command`
-3. **Use**: Design your plate layout and export to CSV/PDF
+### For End Users (Recommended: git clone)
+1. **Clone**: `git clone https://github.com/rrmalmstrom/microwell-plate-layout-gui.git`
+2. **Setup**: `cd microwell-plate-layout-gui && ./setup_microwell_gui.sh` (one-time)
+3. **Launch**: Double-click `🧬 Start Microwell GUI.command` — auto-updates on every launch
+4. **Use**: Design your plate layout and export to CSV/PDF
 
 ### For Developers
-1. **Clone**: `git clone <repository-url>`
-2. **Setup**: `conda env create -f environment.yml`
+1. **Clone**: `git clone https://github.com/rrmalmstrom/microwell-plate-layout-gui.git`
+2. **Setup**: `conda env create -f environment.yml && conda activate microwell-gui`
 3. **Test**: `python tests/test_environment.py`
 4. **Run**: `python run_app.py`
 
@@ -117,12 +118,22 @@ pytest tests/                      # Full test suite
 
 ## 🚀 Distribution
 
-The project includes multiple distribution options:
+The recommended distribution method is **git clone** from the public GitHub repository:
 
-1. **End User Package**: Complete with launchers and documentation
-2. **Developer Setup**: Source code with development tools
-3. **Minimal Environment**: Optimized for production deployment
-4. **Conservative Environment**: Maximum compatibility fallback
+```bash
+git clone https://github.com/rrmalmstrom/microwell-plate-layout-gui.git
+cd microwell-plate-layout-gui
+./setup_microwell_gui.sh
+```
+
+This gives colleagues:
+- ✅ Correct file permissions (no `chmod` needed)
+- ✅ Automatic updates on every launch (via `git pull`)
+- ✅ One-time setup, then just double-click to run
+
+The project also supports:
+1. **Minimal Environment** (`environment.yml`): Optimized for production — Python + Ghostscript only
+2. **Conservative Environment** (`environment_conservative.yml`): Maximum compatibility fallback
 
 ## 🔄 Recent Updates
 

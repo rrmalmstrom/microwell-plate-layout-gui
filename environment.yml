@@ -2,7 +2,7 @@
 # This environment contains only the essential packages needed to run the application
 # Based on comprehensive code analysis of all Python files and dependencies
 
-name: microwell-gui-dev
+name: microwell-gui
 channels:
   - conda-forge
   - defaults

@@ -1,33 +1,57 @@
 # Microwell Plate GUI - Installation Guide
 
-## Quick Start
+## Quick Start (Recommended: git clone)
 
 ### Step 1: Install Conda (if not already installed)
 Download and install Miniconda or Anaconda:
 - **Intel Macs**: [Miniconda3 macOS Intel x86_64](https://docs.conda.io/en/latest/miniconda.html)
 - **Apple Silicon Macs (M1/M2/M3)**: [Miniconda3 macOS Apple M1](https://docs.conda.io/en/latest/miniconda.html)
 
-### Step 2: Create Environment
-Choose one of these approaches:
+### Step 2: Clone the Repository
+```bash
+git clone https://github.com/rrmalmstrom/microwell-plate-layout-gui.git
+cd microwell-plate-layout-gui
+```
 
-#### Option A: Minimal Environment (Recommended)
+> **Why git clone instead of downloading a zip?**
+> - File permissions are preserved — no `chmod` needed
+> - The app auto-updates on every launch via `git pull`
+> - Colleagues always run the latest version automatically
+
+### Step 3: Run Setup (one-time only)
+```bash
+./setup_microwell_gui.sh
+```
+
+This creates the `microwell-gui` conda environment with all required dependencies.
+
+### Step 4: Launch the Application
+Double-click **`🧬 Start Microwell GUI.command`** in Finder.
+
+On every launch it will automatically pull the latest updates before starting.
+
+---
+
+## Manual Environment Setup (if setup script fails)
+
+### Option A: Minimal Environment (Recommended)
 ```bash
 conda env create -f environment.yml
-conda activate microwell-plate-gui
+conda activate microwell-gui
 ```
 
-#### Option B: Conservative Environment (If Option A fails)
+### Option B: Conservative Environment (If Option A fails)
 ```bash
 conda env create -f environment_conservative.yml
-conda activate microwell-plate-gui-conservative
+conda activate microwell-gui
 ```
 
-### Step 3: Test Installation
+### Test Installation
 ```bash
-python test_environment.py
+python tests/test_environment.py
 ```
 
-### Step 4: Run Application
+### Run Application Directly
 ```bash
 python run_app.py
 ```
@@ -65,8 +89,8 @@ If `conda env create` fails with dependency conflicts:
 
 3. **Manual installation fallback**:
    ```bash
-   conda create -n microwell-plate-gui python>=3.8
-   conda activate microwell-plate-gui
+   conda create -n microwell-gui python>=3.8
+   conda activate microwell-gui
    conda install ghostscript -c conda-forge
    ```
 
@@ -169,9 +193,7 @@ conda list | grep -E "(x86_64|arm64|osx)"
 
 To remove the environment:
 ```bash
-conda env remove -n microwell-plate-gui
-# or
-conda env remove -n microwell-plate-gui-conservative
+conda env remove -n microwell-gui
 ```
 
 ## Advanced: Custom Installation
@@ -180,10 +202,10 @@ If both provided environments fail, you can create a custom environment:
 
 ```bash
 # Create base environment
-conda create -n microwell-plate-gui-custom python=3.11
+conda create -n microwell-gui-custom python=3.11
 
 # Activate and install packages one by one
-conda activate microwell-plate-gui-custom
+conda activate microwell-gui-custom
 conda install ghostscript -c conda-forge
 
 # Test after each package

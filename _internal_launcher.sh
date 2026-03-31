@@ -25,9 +25,20 @@ fi
 # Initialize conda for bash (required for conda activate)
 eval "$(conda shell.bash hook)"
 
+# Auto-update check (only runs if distributed via git clone)
+SCRIPT_DIR_EARLY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ -d "$SCRIPT_DIR_EARLY/.git" ] && command -v git &> /dev/null; then
+    echo "  🔄 Checking for updates..."
+    if git -C "$SCRIPT_DIR_EARLY" pull --quiet --ff-only 2>/dev/null; then
+        echo "  ✅ Application is up to date"
+    else
+        echo "  ⚠️  Could not auto-update (no internet or local changes present)"
+    fi
+fi
+
 # Check if the environment exists
-if ! conda env list | grep -q "microwell-gui-dev"; then
-    echo "❌ Error: Environment 'microwell-gui-dev' not found"
+if ! conda env list | grep -q "microwell-gui"; then
+    echo "❌ Error: Environment 'microwell-gui' not found"
     echo "Please create the environment first:"
     echo "  conda env create -f environment.yml"
     exit 1
@@ -35,7 +46,7 @@ fi
 
 # Activate the environment
 echo "  🔧 Activating conda environment..."
-conda activate microwell-gui-dev
+conda activate microwell-gui
 
 # Determine the project directory (where user data files are)
 if [ $# -eq 0 ]; then

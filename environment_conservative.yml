@@ -2,7 +2,7 @@
 # This environment includes additional packages for maximum compatibility
 # Use this if the minimal environment.yml has issues
 
-name: microwell-gui-dev
+name: microwell-gui
 channels:
   - conda-forge
   - defaults
