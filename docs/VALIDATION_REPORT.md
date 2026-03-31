@@ -8,9 +8,10 @@ The comprehensive testing revealed that the application requires only **3 packag
 
 ## Test Environment Details
 
-- **Environment Name**: `microwell-gui-test-minimal`
+- **Environment Name**: `microwell-gui`
 - **Test Platform**: macOS 15.6.1 (Apple Silicon arm64)
-- **Python Version**: 3.14.3
+- **Python Version**: 3.11.14
+- **Ghostscript Version**: 10.06.0
 - **Test Date**: February 18, 2026
 
 ## Package Analysis Results
@@ -80,8 +81,8 @@ zstd                      1.5.7                hbf9d68e_6    conda-forge
 ## Dependency Analysis
 
 ### Production Dependencies (Required)
-1. **python>=3.8** - Core runtime
-2. **ghostscript>=10.0** - PDF export (ps2pdf command)
+1. **python>=3.11,<3.13** - Core runtime (tested on 3.11.14)
+2. **ghostscript>=10.0,<11** - PDF export (ps2pdf command, tested on 10.06.0)
 3. **pip** - Package manager
 
 ### Standard Library Dependencies (Built-in)

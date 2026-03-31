@@ -7,41 +7,52 @@ This distribution package contains everything needed to run the Microwell Plate 
 ### Files Overview
 
 ```
-microwell-plate-gui/
-├── README_DISTRIBUTION.md     # This file
-├── INSTALLATION.md           # Detailed installation instructions
-├── environment.yml           # Minimal conda environment (recommended)
-├── environment_conservative.yml  # Conservative environment (backup)
-├── test_environment.py       # Automated environment testing
-├── run_app.py               # Application launcher
-├── src/                     # Application source code
-├── test_input_data_files/   # Example data files
-└── setup_microwell_gui.sh   # Setup script
+microwell-plate-layout-gui/
+├── docs/
+│   ├── README_DISTRIBUTION.md     # This file
+│   ├── INSTALLATION.md            # Detailed installation instructions
+│   └── VALIDATION_REPORT.md       # Environment validation results
+├── src/microwell_plate_gui/       # Application source code
+├── tests/                         # Test suite
+├── environment.yml                # Minimal conda environment (recommended)
+├── environment_conservative.yml   # Conservative environment (backup)
+├── run_app.py                     # Application entry point
+├── setup_microwell_gui.sh         # One-time setup script
+├── _internal_launcher.sh          # Internal launcher (called by .command file)
+└── 🧬 Start Microwell GUI.command # Double-click launcher for daily use
 ```
 
-## Quick Installation
+## Quick Installation (Recommended)
 
-### For Most Users (Recommended)
 ```bash
-# 1. Create environment
+# 1. Clone the repository
+git clone https://github.com/rrmalmstrom/microwell-plate-layout-gui.git
+cd microwell-plate-layout-gui
+
+# 2. Run one-time setup
+./setup_microwell_gui.sh
+
+# 3. Launch daily by double-clicking:
+#    🧬 Start Microwell GUI.command
+```
+
+The app auto-updates on every launch via `git pull`.
+
+## Manual Environment Setup (if setup script fails)
+
+### Minimal Environment (Recommended)
+```bash
 conda env create -f environment.yml
-
-# 2. Activate environment
 conda activate microwell-gui
-
-# 3. Test installation
-python test_environment.py
-
-# 4. Run application
+python tests/test_environment.py
 python run_app.py
 ```
 
-### If You Encounter Issues
+### Conservative Environment (If minimal fails)
 ```bash
-# Use the conservative environment instead
 conda env create -f environment_conservative.yml
 conda activate microwell-gui
-python test_environment.py
+python tests/test_environment.py
 python run_app.py
 ```
 
@@ -114,9 +125,9 @@ This minimal dependency footprint eliminates the conflicts you experienced with 
 ## Technical Notes
 
 ### Architecture Compatibility
-- Uses loose version constraints (no build strings)
-- Allows conda to select appropriate packages for your Mac
-- Supports both Intel and Apple Silicon architectures
+- Uses pinned version ranges (Python 3.11.x, Ghostscript 10.x) tested on Intel and Apple Silicon
+- No platform-specific build strings — conda selects the right binary for your Mac automatically
+- Supports both Intel (x86_64) and Apple Silicon (arm64) architectures
 
 ### Performance
 - Minimal environment: ~50MB download, 1-2 minute install
@@ -135,27 +146,17 @@ If you need to modify or extend this application:
 1. **Development Environment**:
    ```bash
    conda env create -f environment_conservative.yml
-   conda activate microwell-plate-gui-conservative
+   conda activate microwell-gui
    conda install pytest pillow  # Add development tools
    ```
 
 2. **Testing**:
    ```bash
-   python test_environment.py  # Environment validation
-   pytest tests/               # Full test suite
+   python tests/test_environment.py  # Environment validation
+   pytest tests/                     # Full test suite
    ```
 
-3. **Code Analysis**:
-   - Application uses only Python standard library
-   - No numpy, pandas, or other heavy dependencies in production code
-   - Ghostscript required for PDF export functionality
-
-## Distribution History
-
-This distribution was created by analyzing your complete codebase and identifying:
-- ✅ Essential production dependencies
-- ❌ Test-only dependencies  
-- ❌ Development bloat (80+ packages reduced to 3-5)
-- ✅ Cross-platform compatibility requirements
-
-The result is a lean, reliable distribution that avoids the dependency conflicts of the original development environment while maintaining full functionality.
+3. **Code Notes**:
+   - Application uses only Python standard library (no numpy, pandas, etc. in production code)
+   - Ghostscript (10.x) required for PDF export — tested on 10.06.0
+   - Python 3.11.x required — tested on 3.11.14

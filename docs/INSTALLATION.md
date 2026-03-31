@@ -63,7 +63,7 @@ Both environment files are designed to work on:
 - **Intel Macs** (x86_64 architecture)
 - **Apple Silicon Macs** (arm64 architecture - M1, M2, M3 chips)
 
-The environments use **loose version constraints** without build strings to allow conda to select the appropriate packages for your specific Mac architecture.
+The environments use **pinned version ranges** (Python 3.11.x, Ghostscript 10.x) tested on both architectures to ensure compatibility without locking to a specific build string.
 
 ### Rosetta 2 Compatibility
 If you're on Apple Silicon and encounter issues:
@@ -89,9 +89,9 @@ If `conda env create` fails with dependency conflicts:
 
 3. **Manual installation fallback**:
    ```bash
-   conda create -n microwell-gui python>=3.8
+   conda create -n microwell-gui python>=3.11
    conda activate microwell-gui
-   conda install ghostscript -c conda-forge
+   conda install "ghostscript>=10.0,<11" -c conda-forge
    ```
 
 ### Application Won't Start
@@ -99,7 +99,7 @@ If the app fails to start:
 
 1. **Test the environment**:
    ```bash
-   python test_environment.py
+   python tests/test_environment.py
    ```
 
 2. **Check for missing packages**:
@@ -178,7 +178,7 @@ conda list | grep -E "(x86_64|arm64|osx)"
 ## Support
 
 ### Before Reporting Issues
-1. Run `python test_environment.py` and include output
+1. Run `python tests/test_environment.py` and include output
 2. Run `conda list` and include output
 3. Specify your Mac model and macOS version
 4. Include any error messages
@@ -209,7 +209,7 @@ conda activate microwell-gui-custom
 conda install ghostscript -c conda-forge
 
 # Test after each package
-python test_environment.py
+python tests/test_environment.py
 
 # Add packages only if tests fail
 conda install numpy pandas tk pillow
