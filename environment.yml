@@ -9,10 +9,12 @@ channels:
 
 dependencies:
   # Core Python runtime (includes tkinter, sqlite3, and all standard library modules)
-  - python>=3.8,<4.0
+  # Pinned to tested range: 3.11.x (tested on 3.11.14)
+  - python>=3.11,<3.13
   
   # Essential external dependencies
-  - ghostscript>=10.0  # Required for PDF export functionality (ps2pdf command)
+  # Pinned to tested major version: 10.x (tested on 10.06.0)
+  - ghostscript>=10.0,<11  # Required for PDF export functionality (ps2pdf command)
   
   # Package manager for any future pip-only packages
   - pip

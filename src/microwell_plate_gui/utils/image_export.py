@@ -210,6 +210,7 @@ class ImageExporter:
         Returns:
             bool: True if successful, False otherwise
         """
+        ps_file = None
         try:
             logger.info("Falling back to plate-only export")
             
@@ -234,18 +235,19 @@ class ImageExporter:
                     logger.warning(f"ps2pdf failed: {result.stderr}")
             except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError) as e:
                 logger.warning(f"ps2pdf not available: {e}")
-            
-            # Clean up
-            try:
-                os.remove(ps_file)
-            except:
-                pass
                 
             return False
             
         except Exception as e:
             logger.error(f"Plate-only export failed: {e}")
             return False
+        finally:
+            # Always clean up the temp file, whether export succeeded or failed
+            if ps_file:
+                try:
+                    os.remove(ps_file)
+                except OSError:
+                    pass
 
     def generate_default_filename(self, plate_name: str) -> str:
         """Generate a default filename for PDF export."""

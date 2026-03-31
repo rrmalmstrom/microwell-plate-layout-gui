@@ -494,7 +494,11 @@ class MetadataPanel:
                     logger.warning(f"Image export failed: {image_filename}")
                     messagebox.showwarning(
                         "Partial Export",
-                        f"CSV exported successfully, but image export failed.\n\nCSV: {csv_filename}\nImage export failed: {image_filename}"
+                        f"CSV exported successfully, but PDF export failed.\n\n"
+                        f"CSV: {csv_filename}\n\n"
+                        f"PDF export requires Ghostscript. To fix, run in Terminal:\n"
+                        f"  conda install ghostscript -c conda-forge\n\n"
+                        f"Then restart the application."
                     )
             else:
                 if not self.export_image_callback:
