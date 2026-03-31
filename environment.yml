@@ -31,7 +31,7 @@ dependencies:
 
 # Installation instructions:
 # 1. conda env create -f environment.yml
-# 2. conda activate microwell-plate-gui
+# 2. conda activate microwell-gui
 # 3. python run_app.py
 #
 # To test the installation:

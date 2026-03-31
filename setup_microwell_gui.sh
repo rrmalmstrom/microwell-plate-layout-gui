@@ -61,7 +61,7 @@ elif [ -f "environment_conservative.yml" ]; then
         echo "Trying manual installation approach..."
         
         # Create environment with just Python and essential packages
-        conda create -n microwell-gui python>=3.8 pip -y
+        conda create -n microwell-gui "python>=3.11,<3.13" pip -y
         eval "$(conda shell.bash hook)"
         conda activate microwell-gui
         
@@ -98,9 +98,9 @@ echo "🧪 Testing the environment..."
 conda activate microwell-gui
 
 # Run comprehensive validation if test script exists
-if [ -f "test_environment.py" ]; then
+if [ -f "tests/test_environment.py" ]; then
     echo "Running comprehensive environment validation..."
-    python test_environment.py || {
+    python tests/test_environment.py || {
         echo "❌ Error: Environment validation failed"
         echo "Some functionality may not work properly"
         echo "Consider using the conservative environment instead"

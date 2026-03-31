@@ -37,5 +37,5 @@ dependencies:
 
 # Installation:
 # conda env create -f environment_conservative.yml
-# conda activate microwell-plate-gui-conservative
+# conda activate microwell-gui
 # python test_environment.py

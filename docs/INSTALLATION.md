@@ -109,7 +109,7 @@ If the app fails to start:
 
 3. **Verify ghostscript**:
    ```bash
-   ps2pdf --version
+   gs --version
    ```
 
 ### PDF Export Issues
