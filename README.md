@@ -77,6 +77,7 @@ microwell-plate-gui/
 ## 🎯 Key Features
 
 - **Intuitive GUI**: Easy-to-use interface for plate layout design
+- **Shape-Based Well Visualization**: Sample types are distinguished by shape — circle (sample), triangle (negative control), square (positive control), pentagon (other) — making layouts immediately readable without relying on color
 - **Flexible Layouts**: Support for various plate formats and sample types
 - **Automated Export**: One-click CSV and PDF generation
 - **Cross-Platform**: Works on Intel and Apple Silicon Macs
@@ -137,6 +138,7 @@ The project also supports:
 
 ## 🔄 Recent Updates
 
+- ✅ **Shape-Based Well Visualization**: Wells now use shapes (circle/triangle/square/pentagon) instead of outline colors to differentiate sample types — more accessible and immediately readable
 - ✅ **Minimal Environment**: Reduced from 80+ to 3 packages
 - ✅ **Cross-Platform**: Intel and Apple Silicon Mac support
 - ✅ **Automated Testing**: Comprehensive validation suite
@@ -160,6 +162,6 @@ For issues or questions:
 
 ---
 
-**Version**: 2.0 (Minimal Environment Release)  
-**Last Updated**: February 2026  
+**Version**: 2.1 (Shape-Based Visualization)
+**Last Updated**: April 2026
 **Tested On**: macOS 15.6.1 (Intel + Apple Silicon)

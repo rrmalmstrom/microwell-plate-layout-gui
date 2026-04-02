@@ -73,12 +73,13 @@ class PlateCanvas:
         self.default_well_color = 'lightgray'
         self.selection_color = 'lightblue'
         
-        # Sample type outline colors (ring around wells)
-        self.sample_type_outline_colors = {
-            "sample": "#228B22",      # Forest green outline for sample wells
-            "neg_cntrl": "#DC143C",   # Crimson outline for negative controls
-            "pos_cntrl": "#4169E1",   # Royal blue outline for positive controls
-            "unused": "#696969"       # Dim gray outline for unused wells
+        # Shape types per sample type (used instead of outline colors)
+        # sample -> circle, neg_cntrl -> triangle, pos_cntrl -> square, other -> pentagon
+        self.sample_type_shapes = {
+            "sample": "circle",
+            "neg_cntrl": "triangle",
+            "pos_cntrl": "square",
+            "unused": "circle",   # unassigned wells also shown as circles
         }
         
         # Dynamic color and pattern mappings
@@ -164,28 +165,26 @@ class PlateCanvas:
                 x = start_x + (col * (self.well_size + self.well_spacing))
                 y = start_y + (row * (self.well_size + self.well_spacing))
                 
-                # Create well circle
-                canvas_id = self.canvas.create_oval(
-                    x, y,
-                    x + self.well_size, y + self.well_size,
-                    fill=self.default_well_color,
-                    outline='black',
-                    width=1,
-                    tags=("well", well_name)
-                )
-                
-                # Store well information
+                # Store well information first (needed by _draw_well_shape)
                 self.wells[well_name] = {
                     'name': well_name,
-                    'canvas_id': canvas_id,
+                    'canvas_id': None,  # filled in below
                     'x': x,
                     'y': y,
                     'center_x': x + (self.well_size // 2),
                     'center_y': y + (self.well_size // 2),
                     'selected': False,
                     'row': row,
-                    'col': col
+                    'col': col,
+                    'shape': 'circle',
+                    'fill_color': self.default_well_color,
                 }
+                
+                # Draw default circle shape
+                canvas_id = self._draw_well_shape(
+                    well_name, 'circle', self.default_well_color, 'black', 1
+                )
+                self.wells[well_name]['canvas_id'] = canvas_id
                 
                 # Store for test compatibility
                 self.well_items[well_name] = canvas_id
@@ -279,6 +278,7 @@ class PlateCanvas:
     def _get_well_at_position(self, x: int, y: int) -> Optional[str]:
         """
         Get the well name at the given canvas coordinates.
+        Uses bounding-box hit testing so it works for all shape types.
         
         Args:
             x: X coordinate on canvas
@@ -287,22 +287,15 @@ class PlateCanvas:
         Returns:
             Well name (e.g., "A1") or None if no well at position
         """
-        for well_name, well_info in self.wells.items():
-            well_x = well_info['x']
-            well_y = well_info['y']
-            
-            # Check if point is within well circle
-            if (well_x <= x <= well_x + self.well_size and
-                well_y <= y <= well_y + self.well_size):
-                
-                # More precise circle check
-                center_x = well_info['center_x']
-                center_y = well_info['center_y']
-                distance = math.sqrt((x - center_x)**2 + (y - center_y)**2)
-                
-                if distance <= self.well_size // 2:
-                    return well_name
-        
+        # Use canvas find_overlapping for a 1x1 region at the cursor position;
+        # this correctly handles all shape types (oval, rectangle, polygon).
+        items = self.canvas.find_overlapping(x, y, x, y)
+        for item_id in items:
+            tags = self.canvas.gettags(item_id)
+            if "well" in tags:
+                for tag in tags:
+                    if tag != "well" and tag in self.wells:
+                        return tag
         return None
     
     def _select_wells_in_rectangle(self, x1: int, y1: int, x2: int, y2: int) -> None:
@@ -349,19 +342,12 @@ class PlateCanvas:
         self.selected_wells.add(well_name)
         self.wells[well_name]['selected'] = True
         
-        # Update visual appearance - preserve metadata colors if they exist
+        # Remove pattern overlay during selection
+        self._remove_pattern_overlay(well_name)
+        
+        # Highlight the shape with selection fill (blue), keep black outline
         canvas_id = self.wells[well_name]['canvas_id']
-        if well_name in self.well_metadata:
-            # Well has metadata - keep its colors but add selection indication
-            well_info = self.wells[well_name]
-            fill_color = well_info.get('fill_color', self.default_well_color)
-            outline_color = well_info.get('outline_color', 'black')
-            # Remove pattern overlay during selection and add selection indication
-            self._remove_pattern_overlay(well_name)
-            self.canvas.itemconfig(canvas_id, fill=fill_color, outline='#0000FF', width=4)
-        else:
-            # Well has no metadata - use selection color
-            self.canvas.itemconfig(canvas_id, fill=self.selection_color, outline='#0000FF', width=3)
+        self.canvas.itemconfig(canvas_id, fill=self.selection_color, outline='#0000FF', width=3)
     
     def _deselect_well(self, well_name: str) -> None:
         """Deselect a specific well."""
@@ -371,24 +357,17 @@ class PlateCanvas:
         self.selected_wells.discard(well_name)
         self.wells[well_name]['selected'] = False
         
-        # Update visual appearance - restore metadata colors if they exist
-        canvas_id = self.wells[well_name]['canvas_id']
-        if well_name in self.well_metadata:
-            # Well has metadata - restore its metadata colors and patterns
-            well_info = self.wells[well_name]
-            fill_color = well_info.get('fill_color', self.default_well_color)
-            outline_color = well_info.get('outline_color', 'black')
-            visual_pattern = well_info.get('visual_pattern', '')
-            sample_type = well_info.get('sample_type', 'unused')
-            outline_width = 3 if sample_type != 'unused' else 2
-            self.canvas.itemconfig(canvas_id, fill=fill_color, outline=outline_color, width=outline_width)
-            
-            # Restore pattern overlay if it exists
-            if visual_pattern:
-                self._add_pattern_overlay(well_name, visual_pattern)
-        else:
-            # Well has no metadata - use default color
-            self.canvas.itemconfig(canvas_id, fill=self.default_well_color, outline='black', width=1)
+        # Restore the well's normal appearance
+        well_info = self.wells[well_name]
+        fill_color = well_info.get('fill_color', self.default_well_color)
+        visual_pattern = well_info.get('visual_pattern', '')
+        
+        canvas_id = well_info['canvas_id']
+        self.canvas.itemconfig(canvas_id, fill=fill_color, outline='black', width=1)
+        
+        # Restore pattern overlay if it exists
+        if visual_pattern:
+            self._add_pattern_overlay(well_name, visual_pattern)
     
     def _clear_selection(self) -> None:
         """Clear all well selections."""
@@ -638,7 +617,8 @@ class PlateCanvas:
             if well_name in self.wells:
                 self.wells[well_name]['selected'] = False
                 canvas_id = self.wells[well_name]['canvas_id']
-                self.canvas.itemconfig(canvas_id, fill=self.default_well_color)
+                fill = self.wells[well_name].get('fill_color', self.default_well_color)
+                self.canvas.itemconfig(canvas_id, fill=fill, outline='black', width=1)
         self.selected_wells.clear()
         
         # Select new wells
@@ -648,7 +628,7 @@ class PlateCanvas:
                 self.selected_wells.add(well_name)
                 # Update visual feedback
                 canvas_id = self.wells[well_name]['canvas_id']
-                self.canvas.itemconfig(canvas_id, fill=self.selection_color)
+                self.canvas.itemconfig(canvas_id, fill=self.selection_color, outline='#0000FF', width=3)
         
         # Trigger callback once for the final state
         if self.selection_callback:
@@ -685,7 +665,7 @@ class PlateCanvas:
                 self.selected_wells.add(well_name)
                 # Update visual feedback
                 canvas_id = self.wells[well_name]['canvas_id']
-                self.canvas.itemconfig(canvas_id, fill=self.selection_color)
+                self.canvas.itemconfig(canvas_id, fill=self.selection_color, outline='#0000FF', width=3)
         
         # Trigger callback
         if self.selection_callback:
@@ -702,9 +682,10 @@ class PlateCanvas:
             if well_name in self.selected_wells:
                 self.wells[well_name]['selected'] = False
                 self.selected_wells.remove(well_name)
-                # Update visual feedback
+                # Restore the well's stored fill color
                 canvas_id = self.wells[well_name]['canvas_id']
-                self.canvas.itemconfig(canvas_id, fill=self.default_well_color)
+                fill = self.wells[well_name].get('fill_color', self.default_well_color)
+                self.canvas.itemconfig(canvas_id, fill=fill, outline='black', width=1)
         
         # Trigger callback
         if self.selection_callback:
@@ -800,12 +781,93 @@ class PlateCanvas:
         # Log the metadata application
         print(f"Applied metadata to {len(selected_wells_copy)} wells: {metadata}")
     
+    def _draw_well_shape(self, well_name: str, shape: str, fill: str,
+                         outline: str, width: int) -> int:
+        """
+        Draw a well shape on the canvas and return its canvas item id.
+        
+        Shapes:
+          circle   -> sample
+          triangle -> neg_cntrl
+          square   -> pos_cntrl
+          pentagon -> anything else / other
+        
+        The old canvas item (if any) is deleted before drawing the new one.
+        
+        Args:
+            well_name: Well name (e.g. 'A1')
+            shape: One of 'circle', 'triangle', 'square', 'pentagon'
+            fill: Fill colour string
+            outline: Outline colour string
+            width: Outline width in pixels
+            
+        Returns:
+            New canvas item id
+        """
+        well_info = self.wells[well_name]
+        x = well_info['x']
+        y = well_info['y']
+        s = self.well_size
+        cx = well_info['center_x']
+        cy = well_info['center_y']
+        r = s // 2  # radius / half-size
+        tags = ("well", well_name)
+        
+        # Delete the old shape item if it exists
+        old_id = well_info.get('canvas_id')
+        if old_id is not None:
+            try:
+                self.canvas.delete(old_id)
+            except tk.TclError:
+                pass
+        
+        if shape == 'circle':
+            item_id = self.canvas.create_oval(
+                x, y, x + s, y + s,
+                fill=fill, outline=outline, width=width, tags=tags
+            )
+        elif shape == 'square':
+            item_id = self.canvas.create_rectangle(
+                x, y, x + s, y + s,
+                fill=fill, outline=outline, width=width, tags=tags
+            )
+        elif shape == 'triangle':
+            # Equilateral-ish triangle pointing up, inscribed in the well bounding box
+            pts = [
+                cx, y + 1,          # top centre
+                x + 1, y + s - 1,   # bottom left
+                x + s - 1, y + s - 1  # bottom right
+            ]
+            item_id = self.canvas.create_polygon(
+                *pts, fill=fill, outline=outline, width=width, tags=tags
+            )
+        elif shape == 'pentagon':
+            # Regular pentagon inscribed in the well bounding box
+            pts = []
+            for i in range(5):
+                angle = math.radians(90 + i * 72)  # start at top
+                pts.append(cx + r * math.cos(angle))
+                pts.append(cy - r * math.sin(angle))
+            item_id = self.canvas.create_polygon(
+                *pts, fill=fill, outline=outline, width=width, tags=tags
+            )
+        else:
+            # Fallback: circle
+            item_id = self.canvas.create_oval(
+                x, y, x + s, y + s,
+                fill=fill, outline=outline, width=width, tags=tags
+            )
+        
+        # Update stored shape name
+        well_info['shape'] = shape
+        return item_id
+
     def _update_well_color(self, well_name: str, sample_type: str) -> None:
         """
-        Update well visualization using value-based color and texture system:
-        - Outline color = Sample type
-        - Fill color = Group 1 value (each unique value gets different color)
-        - Fill pattern = Group 2 value (each unique value gets different stipple)
+        Update well visualization using shape + value-based color/texture system:
+        - Shape      = Sample type (circle/square/triangle/pentagon)
+        - Fill color = Group 1 value (each unique value gets a different color)
+        - Fill pattern overlay = Group 2 value
         - Group 3 = Stored but not displayed
         
         Args:
@@ -816,12 +878,10 @@ class PlateCanvas:
             return
             
         well_info = self.wells[well_name]
-        canvas_id = well_info['canvas_id']
         metadata = self.well_metadata.get(well_name, {})
         
-        # Get outline color for sample type
-        outline_color = self.sample_type_outline_colors.get(sample_type, self.sample_type_outline_colors["unused"])
-        outline_width = 3 if sample_type != 'unused' else 2
+        # Determine shape from sample type
+        shape = self.sample_type_shapes.get(sample_type, 'pentagon')
         
         # Get Group 1 and Group 2 values
         group1_value = metadata.get('group1', '').strip()
@@ -831,7 +891,6 @@ class PlateCanvas:
         # Determine fill color based on Group 1 value
         if group1_value:
             if group1_value not in self.group1_colors:
-                # Assign new color to this Group 1 value
                 color_idx = self.color_index % len(self.available_colors)
                 self.group1_colors[group1_value] = self.available_colors[color_idx]
                 self.color_index += 1
@@ -842,7 +901,6 @@ class PlateCanvas:
         # Determine visual pattern based on Group 2 value
         if group2_value:
             if group2_value not in self.group2_patterns:
-                # Assign new pattern to this Group 2 value
                 pattern_idx = self.pattern_index % len(self.available_patterns)
                 self.group2_patterns[group2_value] = self.available_patterns[pattern_idx]
                 self.pattern_index += 1
@@ -850,34 +908,30 @@ class PlateCanvas:
         else:
             visual_pattern = ""  # No pattern (solid fill)
         
-        # Apply colors to the well (remove old pattern overlays first)
+        # Remove old pattern overlays before redrawing the shape
         self._remove_pattern_overlay(well_name)
         
+        # Redraw the well with the correct shape
         if well_name in self.selected_wells:
-            # For selected wells, use selection color but keep the outline
-            self.canvas.itemconfig(canvas_id,
-                                 fill=self.selection_color,
-                                 outline=outline_color,
-                                 width=outline_width)
+            new_id = self._draw_well_shape(well_name, shape, self.selection_color, '#0000FF', 3)
         else:
-            # For unselected wells, use the value-based colors
-            self.canvas.itemconfig(canvas_id,
-                                 fill=fill_color,
-                                 outline=outline_color,
-                                 width=outline_width)
+            new_id = self._draw_well_shape(well_name, shape, fill_color, 'black', 1)
         
-        # Add visual pattern overlay if Group 2 value exists
+        # Update canvas_id references
+        well_info['canvas_id'] = new_id
+        self.well_items[well_name] = new_id
+        
+        # Add visual pattern overlay if Group 2 value exists and well is not selected
         if visual_pattern and well_name not in self.selected_wells:
             self._add_pattern_overlay(well_name, visual_pattern)
             
         # Update the well's stored info
-        self.wells[well_name]['outline_color'] = outline_color
-        self.wells[well_name]['sample_type'] = sample_type
-        self.wells[well_name]['group1_value'] = group1_value
-        self.wells[well_name]['group2_value'] = group2_value
-        self.wells[well_name]['group3_value'] = group3_value
-        self.wells[well_name]['fill_color'] = fill_color
-        self.wells[well_name]['visual_pattern'] = visual_pattern
+        well_info['sample_type'] = sample_type
+        well_info['group1_value'] = group1_value
+        well_info['group2_value'] = group2_value
+        well_info['group3_value'] = group3_value
+        well_info['fill_color'] = fill_color
+        well_info['visual_pattern'] = visual_pattern
     
     def _determine_group_level(self, metadata: Dict) -> str:
         """
@@ -913,7 +967,7 @@ class PlateCanvas:
     
     def clear_all_metadata(self) -> None:
         """
-        Clear all metadata from all wells and reset their colors to default.
+        Clear all metadata from all wells and reset their shapes/colors to default.
         """
         # Clear metadata storage
         self.well_metadata.clear()
@@ -924,29 +978,24 @@ class PlateCanvas:
         self.color_index = 0
         self.pattern_index = 0
         
-        # Reset all well colors to default and remove pattern overlays
+        # Reset all wells to default circle shape with default color
         for well_name, well_info in self.wells.items():
-            canvas_id = well_info['canvas_id']
-            
             # Remove any pattern overlays
             self._remove_pattern_overlay(well_name)
             
-            # Reset to default well appearance
+            # Redraw as default circle
             if well_name in self.selected_wells:
-                # If well is selected, use selection color
-                self.canvas.itemconfig(canvas_id,
-                                     fill=self.selection_color,
-                                     outline=self.selection_color,
-                                     width=2)
+                new_id = self._draw_well_shape(well_name, 'circle', self.selection_color, '#0000FF', 3)
             else:
-                # Use default colors (unused sample type, no groups)
-                self.canvas.itemconfig(canvas_id,
-                                     fill=self.default_well_color,  # Default fill
-                                     outline=self.sample_type_outline_colors["unused"],  # Default outline
-                                     width=1)
+                new_id = self._draw_well_shape(well_name, 'circle', self.default_well_color, 'black', 1)
+            
+            well_info['canvas_id'] = new_id
+            self.well_items[well_name] = new_id
+            well_info['fill_color'] = self.default_well_color
+            well_info['shape'] = 'circle'
             
             # Clear stored metadata attributes
-            attributes_to_clear = ['fill_color', 'outline_color', 'sample_type', 'group_level',
+            attributes_to_clear = ['outline_color', 'sample_type', 'group_level',
                                  'group1_value', 'group2_value', 'group3_value', 'metadata_color',
                                  'visual_pattern', 'pattern_overlays']
             for attr in attributes_to_clear:

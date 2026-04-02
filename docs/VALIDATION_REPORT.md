@@ -63,6 +63,8 @@ zstd                      1.5.7                hbf9d68e_6    conda-forge
 - ✅ GUI launched successfully
 - ✅ User interface responsive
 - ✅ Metadata form accepts input
+- ✅ Well shapes update correctly per sample type (circle/triangle/square/pentagon)
+- ✅ Legend panel displays correct shapes with labels
 - ✅ CSV export functional (384 data rows generated)
 - ✅ PDF export functional (PostScript → PDF conversion)
 - ✅ File operations successful
@@ -138,6 +140,18 @@ The minimal environment is **ready for production distribution** with:
 2. Consider bundling example database file
 3. Add architecture detection to installation scripts
 
+## Changelog
+
+### v2.1 — April 2026
+- **Shape-Based Well Visualization**: Replaced outline-color differentiation with shape-based differentiation for sample types:
+  - `sample` → circle
+  - `neg_cntrl` → triangle (pointing up)
+  - `pos_cntrl` → square
+  - `other` / unrecognized → pentagon
+- **Legend Panel**: Updated to display actual shapes instead of colored-outline circles
+- **Hit Testing**: Improved `_get_well_at_position()` to use `canvas.find_overlapping()` for accurate hit detection across all shape types
+- **Manually verified**: April 2, 2026
+
 ## Conclusion
 
 The minimal conda environment validation was **completely successful**. The application works flawlessly with only 3 external packages, solving the dependency conflict issues experienced with the 80+ package development environment.
@@ -146,6 +160,6 @@ The minimal conda environment validation was **completely successful**. The appl
 
 ---
 
-**Validation Completed**: February 18, 2026  
-**Validator**: Automated Test Suite + Manual Testing  
+**Validation Completed**: February 18, 2026 (v2.0) / April 2, 2026 (v2.1)
+**Validator**: Automated Test Suite + Manual Testing
 **Status**: ✅ APPROVED FOR DISTRIBUTION

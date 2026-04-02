@@ -5,6 +5,7 @@ This module provides the LegendPanel class for displaying dynamic legends
 that show the mapping between metadata values and visual representations.
 """
 
+import math
 import tkinter as tk
 from tkinter import ttk
 from typing import Dict, Optional
@@ -67,37 +68,72 @@ class LegendPanel:
         self._create_sample_type_legend()
     
     def _create_sample_type_legend(self):
-        """Create the sample type legend section."""
+        """Create the sample type legend section showing shapes per sample type."""
         if self.sample_type_frame:
             self.sample_type_frame.destroy()
         
         self.sample_type_frame = ttk.LabelFrame(
             self.scrollable_frame,
-            text="Sample Types (Outline Colors)",
+            text="Sample Types (Shapes)",
             padding="5"
         )
         self.sample_type_frame.pack(fill=tk.X, pady=(0, 5))
         
-        # Sample type colors (from PlateCanvas)
-        sample_types = {
-            "sample": "#228B22",      # Forest green
-            "neg_cntrl": "#DC143C",   # Crimson
-            "pos_cntrl": "#4169E1",   # Royal blue
-            "unused": "#696969"       # Dim gray
-        }
+        # Shape mapping: sample_type -> (shape, display_label)
+        sample_type_shapes = [
+            ("sample",    "circle",   "Sample"),
+            ("neg_cntrl", "triangle", "Neg Control"),
+            ("pos_cntrl", "square",   "Pos Control"),
+            ("other",     "pentagon", "Other"),
+        ]
         
-        for i, (sample_type, color) in enumerate(sample_types.items()):
+        for sample_type, shape, label_text in sample_type_shapes:
             row_frame = ttk.Frame(self.sample_type_frame)
             row_frame.pack(fill=tk.X, pady=1)
             
-            # Color indicator (small circle)
-            color_canvas = tk.Canvas(row_frame, width=20, height=20, highlightthickness=0)
-            color_canvas.pack(side=tk.LEFT, padx=(0, 5))
-            color_canvas.create_oval(2, 2, 18, 18, fill="lightgray", outline=color, width=3)
+            # Shape indicator canvas
+            shape_canvas = tk.Canvas(row_frame, width=20, height=20, highlightthickness=0)
+            shape_canvas.pack(side=tk.LEFT, padx=(0, 5))
+            self._draw_legend_shape(shape_canvas, shape)
             
             # Label
-            label = ttk.Label(row_frame, text=sample_type.replace("_", " ").title())
+            label = ttk.Label(row_frame, text=label_text)
             label.pack(side=tk.LEFT)
+
+    def _draw_legend_shape(self, canvas: tk.Canvas, shape: str) -> None:
+        """
+        Draw a sample-type shape on a small legend canvas (20x20 px).
+        
+        Args:
+            canvas: The tk.Canvas to draw on
+            shape: One of 'circle', 'square', 'triangle', 'pentagon'
+        """
+        cx, cy, r = 10, 10, 8  # centre and radius for a 20x20 canvas
+
+        if shape == 'circle':
+            canvas.create_oval(
+                cx - r, cy - r, cx + r, cy + r,
+                fill='lightgray', outline='black', width=1
+            )
+        elif shape == 'square':
+            canvas.create_rectangle(
+                cx - r, cy - r, cx + r, cy + r,
+                fill='lightgray', outline='black', width=1
+            )
+        elif shape == 'triangle':
+            pts = [
+                cx, cy - r,          # top
+                cx - r, cy + r,      # bottom-left
+                cx + r, cy + r,      # bottom-right
+            ]
+            canvas.create_polygon(*pts, fill='lightgray', outline='black', width=1)
+        elif shape == 'pentagon':
+            pts = []
+            for i in range(5):
+                angle = math.radians(90 + i * 72)
+                pts.append(cx + r * math.cos(angle))
+                pts.append(cy - r * math.sin(angle))
+            canvas.create_polygon(*pts, fill='lightgray', outline='black', width=1)
     
     def update_group1_legend(self, group1_colors: Dict[str, str]):
         """
